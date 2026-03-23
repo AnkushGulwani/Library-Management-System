@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraryOS — Librarian Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#2563eb;--primary-dark:#1e40af;--primary-light:#3b82f6;--primary-xlight:#eff6ff;
+  --accent:#f59e0b;--success:#10b981;--danger:#ef4444;--purple:#8b5cf6;--teal:#0d9488;
+  --text:#0f172a;--muted:#64748b;--muted2:#94a3b8;--bg:#f1f5f9;--white:#fff;
+  --border:#e2e8f0;--border2:#f1f5f9;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 10px 24px rgba(0,0,0,.1);--shadow-xl:0 20px 40px rgba(0,0,0,.12);
+  --r:10px;--r-lg:14px;--r-xl:18px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);background:var(--bg);display:flex;min-height:100vh;font-size:14px}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{width:258px;background:var(--primary-dark);min-height:100vh;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:50;box-shadow:4px 0 24px rgba(0,0,0,.18)}
+.sidebar-logo{padding:20px 16px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(59,130,246,.4)}
+.logo-icon svg{width:20px;height:20px;fill:white}
+.brand-text{color:white;font-size:.95rem;font-weight:800;line-height:1.2;letter-spacing:-.3px}
+.brand-text span{display:block;font-size:.61rem;font-weight:400;opacity:.4;margin-top:1px;letter-spacing:.9px;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-section{color:rgba(255,255,255,.25);font-size:.59rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;padding:0 9px;margin:14px 0 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.52);font-size:.83rem;font-weight:500;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;position:relative}
+.nav-item svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+.nav-item:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.92)}
+.nav-item.active{background:rgba(255,255,255,.14);color:white;font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:55%;background:#60a5fa;border-radius:0 3px 3px 0}
+.nav-badge{margin-left:auto;background:var(--danger);color:white;font-size:.58rem;font-weight:700;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:10px 10px 14px;border-top:1px solid rgba(255,255,255,.08)}
+.lib-card{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.07);margin-bottom:8px}
+.lib-av{width:33px;height:33px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:.7rem;flex-shrink:0;text-transform:uppercase}
+.lib-name{color:white;font-size:.81rem;font-weight:600;line-height:1.3}
+.lib-role{color:rgba(255,255,255,.35);font-size:.62rem}
+.logout-btn{width:100%;padding:8px;border-radius:7px;border:1.5px solid rgba(239,68,68,.45);background:transparent;color:rgba(239,68,68,.75);font-weight:600;font-size:.78rem;cursor:pointer;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif}
+.logout-btn:hover{background:var(--danger);color:white;border-color:var(--danger)}
+
+/* ═══ MAIN ═══ */
+.main{margin-left:258px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:var(--shadow-sm)}
+.topbar-left h1{font-size:1.18rem;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 15px;border-radius:8px;border:none;font-weight:600;font-size:.79rem;cursor:pointer;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;box-shadow:0 2px 8px rgba(37,99,235,.28)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,.38)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-xlight)}
+.btn-success{background:var(--success);color:white}
+.btn-success:hover{background:#0ea571}
+.btn-danger{background:var(--danger);color:white}
+.btn-danger:hover{background:#dc2626}
+.btn-teal{background:var(--teal);color:white}
+.btn-teal:hover{background:#0f766e}
+.btn-warning{background:var(--accent);color:white}
+.btn-warning:hover{background:#d97706}
+.btn-sm{padding:5px 11px;font-size:.76rem}
+.btn-xs{padding:4px 9px;font-size:.7rem;border-radius:6px}
+
+.page{padding:24px 28px;flex:1}
+.section{display:none}
+.section.active{display:block;animation:fadeUp .28s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ WELCOME ═══ */
+.welcome-banner{background:linear-gradient(135deg,#1e40af 0%,#2563eb 55%,#3b82f6 100%);border-radius:var(--r-xl);padding:26px 30px;color:white;margin-bottom:22px;box-shadow:0 8px 28px rgba(37,99,235,.22);position:relative;overflow:hidden}
+.welcome-banner::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.04);border-radius:50%}
+.welcome-banner::before{content:'';position:absolute;right:80px;bottom:-50px;width:120px;height:120px;background:rgba(255,255,255,.03);border-radius:50%}
+.welcome-banner h2{font-size:1.5rem;font-weight:800;margin-bottom:4px;letter-spacing:-.4px;position:relative}
+.welcome-banner p{font-size:.86rem;opacity:.82;position:relative}
+.today-lbl{font-size:.68rem;opacity:.5;margin-top:5px;font-weight:500;position:relative}
+
+/* ═══ STATS ═══ */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stats-grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:white;border-radius:var(--r);padding:17px 18px;box-shadow:var(--shadow-sm);border:1px solid var(--border2);transition:all .22s;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+.stat-card.blue::after{background:linear-gradient(90deg,var(--primary),var(--primary-light))}
+.stat-card.green::after{background:linear-gradient(90deg,#059669,var(--success))}
+.stat-card.red::after{background:linear-gradient(90deg,#dc2626,var(--danger))}
+.stat-card.yellow::after{background:linear-gradient(90deg,#d97706,var(--accent))}
+.stat-card.purple::after{background:linear-gradient(90deg,#7c3aed,var(--purple))}
+.stat-card.teal::after{background:linear-gradient(90deg,#0f766e,var(--teal))}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.stat-label{font-size:.67rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.stat-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.stat-ico svg{width:17px;height:17px;fill:currentColor}
+.stat-ico.blue{background:rgba(37,99,235,.1);color:var(--primary)}
+.stat-ico.green{background:rgba(16,185,129,.1);color:var(--success)}
+.stat-ico.red{background:rgba(239,68,68,.1);color:var(--danger)}
+.stat-ico.yellow{background:rgba(245,158,11,.1);color:var(--accent)}
+.stat-ico.purple{background:rgba(139,92,246,.1);color:var(--purple)}
+.stat-ico.teal{background:rgba(13,148,136,.1);color:var(--teal)}
+.stat-val{font-size:1.75rem;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1}
+.stat-sub{font-size:.68rem;color:var(--muted2);margin-top:4px}
+
+/* ═══ CARD ═══ */
+.card{background:white;border-radius:var(--r);box-shadow:var(--shadow-sm);border:1px solid var(--border2);overflow:hidden;margin-bottom:18px}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-head h3{font-size:.91rem;font-weight:700;color:var(--text)}
+.card-meta{font-size:.72rem;color:var(--muted2);font-weight:500}
+.card-body{padding:18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+/* ═══ SECTION HEADER ═══ */
+.sec-head{margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sec-head h2{font-size:1.22rem;font-weight:800;color:var(--text);letter-spacing:-.3px}
+
+/* ═══ FILTERS ═══ */
+.filters{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:200px;position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;fill:var(--muted2);pointer-events:none}
+.search-wrap input{width:100%;padding:8px 10px 8px 28px;border:1.5px solid var(--border);border-radius:8px;font-size:.83rem;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;background:white;color:var(--text)}
+.search-wrap input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.search-wrap input::placeholder{color:var(--muted2)}
+select{padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.83rem;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);background:white;cursor:pointer}
+select:focus{outline:none;border-color:var(--primary)}
+
+/* ═══ VIEW TOGGLE ═══ */
+.view-toggle{display:flex;gap:2px;background:#f1f5f9;padding:3px;border-radius:8px}
+.view-btn{width:30px;height:30px;border:none;background:transparent;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.view-btn svg{width:14px;height:14px;fill:var(--muted)}
+.view-btn.active{background:white;box-shadow:var(--shadow-sm)}
+.view-btn.active svg{fill:var(--primary)}
+
+/* ═══ TABLE ═══ */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+thead th{background:#f8fafc;padding:9px 14px;text-align:left;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border)}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:middle}
+tbody tr:hover{background:#fafbff}
+tbody tr:last-child td{border-bottom:none}
+.overdue-row td:first-child{border-left:3px solid var(--danger);padding-left:11px}
+.pending-row{background:#fffbeb!important}
+.expired-row td:first-child{border-left:3px solid var(--danger)}
+.no-plan-row td:first-child{border-left:3px solid var(--muted2)}
+
+/* ═══ BADGES ═══ */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:.68rem;font-weight:600}
+.badge-success{background:#dcfce7;color:#166534}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-warning{background:#fef3c7;color:#92400e}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-purple{background:#ede9fe;color:#5b21b6}
+.badge-teal{background:#ccfbf1;color:#0f766e}
+.badge-gray{background:#f1f5f9;color:var(--muted)}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0}
+
+/* ═══ ACTION BTNS ═══ */
+.act-btns{display:flex;gap:4px}
+.icon-btn{width:27px;height:27px;border-radius:7px;border:1.5px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.icon-btn svg{width:11px;height:11px;fill:var(--muted)}
+.icon-btn:hover{border-color:var(--primary);background:var(--primary-xlight)}
+.icon-btn:hover svg{fill:var(--primary)}
+.icon-btn.del:hover{border-color:var(--danger);background:#fee2e2}
+.icon-btn.del:hover svg{fill:var(--danger)}
+
+/* ═══ BOOK COVER THUMB (table) ═══ */
+.book-thumb{width:36px;height:50px;border-radius:5px;object-fit:cover;display:block;box-shadow:0 2px 6px rgba(0,0,0,.14);border:1px solid var(--border)}
+.book-thumb-placeholder{width:36px;height:50px;border-radius:5px;background:linear-gradient(135deg,#dbeafe,#ede9fe);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:var(--primary);border:1px solid var(--border);flex-shrink:0;text-align:center;line-height:1.2;padding:2px}
+.book-cover-cell{display:flex;align-items:center;gap:10px}
+
+/* ═══ BOOK GRID (card view) ═══ */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px}
+.book-card{background:white;border-radius:var(--r);border:1.5px solid var(--border2);overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm);cursor:pointer}
+.book-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--primary-light)}
+.book-card-cover{width:100%;height:190px;object-fit:cover;display:block;background:#f1f5f9}
+.book-card-cover-placeholder{width:100%;height:190px;background:linear-gradient(135deg,#dbeafe 0%,#ede9fe 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.book-card-cover-placeholder svg{width:32px;height:32px;fill:#94a3b8}
+.book-card-cover-placeholder span{font-size:.65rem;color:#94a3b8;font-weight:600;text-align:center;padding:0 8px}
+.book-card-body{padding:10px 12px 12px}
+.book-card-title{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book-card-author{font-size:.71rem;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-card-foot{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.copies-pill{font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:10px;background:#f1f5f9;color:var(--muted)}
+.book-card-actions{display:flex;gap:3px;margin-top:7px}
+.book-card-actions .btn{flex:1;font-size:.68rem;padding:4px 6px;justify-content:center}
+
+/* ═══ HISTORY ═══ */
+.hist-list{display:flex;flex-direction:column;gap:8px}
+.hist-item{background:white;border-radius:var(--r);padding:12px 15px;box-shadow:var(--shadow-sm);border:1px solid var(--border2);display:flex;gap:12px;align-items:flex-start;transition:all .18s}
+.hist-item:hover{box-shadow:var(--shadow-md);transform:translateX(2px)}
+.hist-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hist-ico svg{width:15px;height:15px;fill:currentColor}
+.hist-ico.done{background:#dcfce7;color:#16a34a}
+.hist-ico.active{background:#dbeafe;color:var(--primary)}
+.hist-ico.late{background:#fee2e2;color:var(--danger)}
+.hist-body{flex:1;min-width:0}
+.hist-title{font-weight:600;font-size:.85rem;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hist-meta{font-size:.72rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.hist-fine{font-weight:700;color:var(--danger);font-size:.83rem;white-space:nowrap;align-self:center;background:#fee2e2;padding:3px 9px;border-radius:20px}
+
+/* ═══ REQUEST CARDS ═══ */
+.req-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.req-card{background:white;border-radius:var(--r);border:1.5px solid var(--border2);padding:15px;transition:all .2s;box-shadow:var(--shadow-sm)}
+.req-card:hover{box-shadow:var(--shadow-md)}
+.req-card.pending{border-left:3px solid var(--accent)}
+.req-card.approved{border-left:3px solid var(--success)}
+.req-card.rejected{border-left:3px solid var(--danger)}
+.req-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:2px}
+.req-author{font-size:.76rem;color:var(--muted);margin-bottom:8px}
+.req-desc{font-size:.75rem;color:var(--muted);font-style:italic;margin-bottom:10px;line-height:1.5;padding:7px 10px;background:#f8fafc;border-radius:6px}
+.req-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px}
+.req-by{font-size:.71rem;color:var(--muted2)}
+
+/* ═══ PLAN CARDS ═══ */
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.plan-card{background:white;border-radius:var(--r);border:1.5px solid var(--border2);padding:20px;transition:all .2s;box-shadow:var(--shadow-sm);position:relative}
+.plan-card:hover{border-color:var(--primary-light);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.plan-badge{position:absolute;top:14px;right:14px}
+.plan-name{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:3px}
+.plan-price{font-size:1.45rem;font-weight:800;color:var(--primary);margin:8px 0 3px}
+.plan-price span{font-size:.79rem;font-weight:500;color:var(--muted)}
+.plan-features{list-style:none;margin:10px 0;font-size:.78rem;color:var(--text)}
+.plan-features li{padding:4px 0;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:6px}
+.plan-features li:last-child{border-bottom:none}
+.plan-features li::before{content:'✓';color:var(--success);font-weight:700}
+.plan-actions{display:flex;gap:7px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border2)}
+
+/* ═══ USER CARDS ═══ */
+.user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.user-card{background:white;border-radius:var(--r);border:1.5px solid var(--border2);padding:16px;transition:all .2s;box-shadow:var(--shadow-sm);display:flex;gap:12px;align-items:flex-start}
+.user-card:hover{box-shadow:var(--shadow-md);border-color:var(--border)}
+.user-card.expired{border-left:3px solid var(--danger)}
+.user-card.active-mem{border-left:3px solid var(--success)}
+.user-card.no-plan{border-left:3px solid var(--muted2)}
+.user-av{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:.8rem;flex-shrink:0;text-transform:uppercase}
+.user-av.blue{background:linear-gradient(135deg,var(--primary),var(--primary-light))}
+.user-av.green{background:linear-gradient(135deg,#059669,var(--success))}
+.user-av.purple{background:linear-gradient(135deg,#7c3aed,var(--purple))}
+.user-av.teal{background:linear-gradient(135deg,#0f766e,var(--teal))}
+.user-info{flex:1;min-width:0}
+.user-name{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:2px}
+.user-email{font-size:.73rem;color:var(--muted2);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-plan-info{display:flex;flex-direction:column;gap:3px}
+.user-plan-name{font-size:.75rem;font-weight:600;color:var(--text)}
+.user-plan-dates{font-size:.69rem;color:var(--muted2)}
+.user-actions{display:flex;gap:5px;margin-top:8px}
+
+/* ═══ PENDING USER CARDS ═══ */
+.pending-user-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.pending-user-card{background:white;border-radius:var(--r);border:1.5px solid var(--border2);padding:16px;transition:all .2s;box-shadow:var(--shadow-sm);border-left:3px solid var(--accent)}
+.pending-user-card:hover{box-shadow:var(--shadow-md)}
+.pu-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pu-av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#d97706,var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:.78rem;flex-shrink:0}
+.pu-name{font-weight:700;font-size:.88rem;color:var(--text)}
+.pu-email{font-size:.73rem;color:var(--muted2)}
+.pu-details{font-size:.75rem;color:var(--muted);margin-bottom:10px;background:#fffbeb;border-radius:7px;padding:8px 10px}
+.pu-details p{margin-bottom:3px}
+.pu-details p:last-child{margin-bottom:0}
+.pu-actions{display:flex;gap:6px}
+
+/* ═══ MODAL ═══ */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
+.modal-backdrop.open{display:flex;animation:fadeUp .2s ease}
+.modal{background:white;border-radius:var(--r-xl);width:100%;max-width:540px;box-shadow:var(--shadow-xl);overflow:hidden}
+.modal.sm{max-width:410px}
+.modal-head{padding:17px 22px;background:linear-gradient(135deg,var(--primary-dark),var(--primary));display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{color:white;font-size:.97rem;font-weight:700}
+.modal-close{width:25px;height:25px;border-radius:6px;border:1px solid rgba(255,255,255,.22);background:transparent;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:all .15s}
+.modal-close:hover{background:rgba(255,255,255,.15)}
+.modal-body{padding:20px 22px;max-height:70vh;overflow-y:auto}
+.modal-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;justify-content:flex-end;gap:8px;background:#fafbfc}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.form-group label{font-size:.78rem;font-weight:600;color:var(--text)}
+.hint{font-size:.68rem;color:var(--muted2);margin-top:1px}
+.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:.84rem;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;color:var(--text)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.form-group textarea{resize:vertical;min-height:68px}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 13px;font-size:.78rem;color:#1e40af;line-height:1.5;margin-bottom:11px}
+.danger-box{background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:10px 13px;font-size:.8rem;color:#991b1b;line-height:1.6}
+.loading-row td{text-align:center;padding:32px;color:var(--muted2);font-style:italic}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted2)}
+.empty-state svg{width:44px;height:44px;fill:#cbd5e1;margin-bottom:10px}
+.empty-state p{font-size:.85rem}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 15px;border-radius:9px;font-size:.8rem;font-weight:600;z-index:9999;box-shadow:var(--shadow-xl);animation:slideIn .25s ease;max-width:300px;display:flex;align-items:center;gap:7px}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast.success{background:#064e3b;color:white}
+.toast.error{background:#7f1d1d;color:white}
+.toast.info{background:var(--primary-dark);color:white}
+.toast svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+
+/* ═══ IMAGE UPLOAD PREVIEW ═══ */
+.img-upload-wrap{position:relative;width:100%;border:2px dashed var(--border);border-radius:10px;overflow:hidden;transition:border-color .18s;background:#fafbfc;cursor:pointer}
+.img-upload-wrap:hover{border-color:var(--primary)}
+.img-upload-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:6px;min-height:100px}
+.img-upload-inner svg{width:24px;height:24px;fill:var(--muted2)}
+.img-upload-inner span{font-size:.77rem;color:var(--muted);font-weight:500;text-align:center}
+.img-upload-preview{width:100%;max-height:160px;object-fit:cover;display:none;border-radius:8px}
+.img-upload-preview.show{display:block}
+.img-upload-inner.has-img{display:none}
+input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* ═══ TAB PILLS ═══ */
+.tab-pills{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:9px;margin-bottom:16px;width:fit-content}
+.tab-pill{padding:6px 14px;border-radius:7px;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.tab-pill.active{background:white;color:var(--text);box-shadow:var(--shadow-sm)}
+
+/* ═══ IMAGE VIEWER MODAL ═══ */
+.img-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;cursor:zoom-out}
+.img-viewer.open{display:flex}
+.img-viewer img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.img-viewer-close{position:absolute;top:20px;right:24px;color:white;font-size:1.8rem;cursor:pointer;opacity:.7;background:rgba(0,0,0,.4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;transition:opacity .15s}
+.img-viewer-close:hover{opacity:1}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+@media(max-width:1200px){.stats-grid,.stats-grid-5{grid-template-columns:repeat(2,1fr)}.two-col,.three-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- IMAGE VIEWER -->
+<div class="img-viewer" id="img-viewer" onclick="closeImgViewer()">
+  <button class="img-viewer-close">✕</button>
+  <img id="img-viewer-src" src="" alt="Cover">
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M4 6h2v12H4zm4 0h2v12H8zm4 0h2v12h-2zm4 0h2v12h-2z"/></svg></div>
+    <div class="brand-text">LibraryOS<span>Management Portal</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <button class="nav-item active" onclick="nav('dashboard',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard
+    </button>
+    <div class="nav-section">Books</div>
+    <button class="nav-item" onclick="nav('books',this)">
+      <svg viewBox="0 0 24 24"><path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/></svg>Book Catalogue
+    </button>
+    <button class="nav-item" onclick="nav('requests',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>Book Requests
+      <span class="nav-badge" id="req-badge" style="display:none">0</span>
+    </button>
+    <div class="nav-section">Circulation</div>
+    <button class="nav-item" onclick="nav('issues',this)">
+      <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28L13 13.5V8h-1z"/></svg>Borrowing History
+    </button>
+    <button class="nav-item" onclick="nav('overdue',this)">
+      <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>Overdue &amp; Fines
+      <span class="nav-badge" id="ov-badge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('payments',this)">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Payment History
+    </button>
+    <div class="nav-section">Members</div>
+    <button class="nav-item" onclick="nav('members',this)">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>All Members
+      <span class="nav-badge" id="mem-badge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('plans',this)">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Membership Plans
+    </button>
+    <button class="nav-item" onclick="nav('admin',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Admin: Verify Users
+      <span class="nav-badge" id="admin-badge" style="display:none">0</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="lib-card">
+      <div class="lib-av" id="sidebar-av">?</div>
+      <div><div class="lib-name" id="sidebar-name">Loading…</div><div class="lib-role" id="sidebar-role">Librarian</div></div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">← Logout</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <nav class="topbar">
+    <div class="topbar-left">
+      <h1 id="page-title">Dashboard</h1>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline" onclick="openAddBook()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Add Book
+      </button>
+      <button class="btn btn-primary" onclick="openModal('modal-issue')">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Issue Book
+      </button>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="section active" id="sec-dashboard">
+      <div class="welcome-banner">
+        <h2 id="welcome-heading">Good day! 👋</h2>
+        <p id="welcome-sub">Your library at a glance — all figures pulled live.</p>
+        <div class="today-lbl" id="today-str"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-top"><div class="stat-label">Total Books</div><div class="stat-ico blue"><svg viewBox="0 0 24 24"><path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/></svg></div></div><div class="stat-val" id="s-books">—</div><div class="stat-sub">In catalogue</div></div>
+        <div class="stat-card green"><div class="stat-top"><div class="stat-label">Active Issues</div><div class="stat-ico green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div></div><div class="stat-val" id="s-active">—</div><div class="stat-sub">Currently borrowed</div></div>
+        <div class="stat-card red"><div class="stat-top"><div class="stat-label">Overdue</div><div class="stat-ico red"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div></div><div class="stat-val" id="s-overdue">—</div><div class="stat-sub">Past due date</div></div>
+        <div class="stat-card yellow"><div class="stat-top"><div class="stat-label">Pending Fines</div><div class="stat-ico yellow"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div></div><div class="stat-val" id="s-fines">—</div><div class="stat-sub">Accumulated</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><h3>Recent Borrowings</h3><button class="btn btn-outline btn-sm" onclick="nav('issues',null)">View All →</button></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Member</th><th>Book</th><th>Due</th><th>Status</th></tr></thead><tbody id="dash-recent"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>⚠️ Overdue Alert</h3><button class="btn btn-outline btn-sm" onclick="nav('overdue',null)">View All →</button></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Member</th><th>Book</th><th>Days Late</th><th>Fine</th></tr></thead><tbody id="dash-overdue"></tbody></table></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>📬 Pending Book Requests</h3><button class="btn btn-outline btn-sm" onclick="nav('requests',null)">Manage All →</button></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Author</th><th>Requested By</th><th>Date</th><th>Action</th></tr></thead><tbody id="dash-requests"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ══ BOOKS ══ -->
+    <div class="section" id="sec-books">
+      <div class="sec-head">
+        <h2>Book Catalogue</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="view-toggle">
+            <button class="view-btn active" id="view-grid-btn" onclick="setBookView('grid')" title="Grid view">
+              <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg>
+            </button>
+            <button class="view-btn" id="view-list-btn" onclick="setBookView('list')" title="List view">
+              <svg viewBox="0 0 24 24"><path d="M3 5h2V3H3v2zm0 4h2V7H3v2zm0 4h2v-2H3v2zm4-8h14V3H7v2zm0 4h14V7H7v2zm0 4h14v-2H7v2zm-4 4h2v-2H3v2zm4 0h14v-2H7v2z"/></svg>
+            </button>
+          </div>
+          <button class="btn btn-primary" onclick="openAddBook()"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Add Book</button>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="search-wrap"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="book-q" placeholder="Search title, author, ISBN or genre…" oninput="renderBooks()"></div>
+        <select id="book-sf" onchange="renderBooks()"><option value="">All Status</option><option value="AVAILABLE">Available</option><option value="PARTIAL">Partial</option><option value="ISSUED">All Issued</option></select>
+      </div>
+      <!-- Grid view -->
+      <div id="books-grid-view">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span class="card-meta" id="book-count-grid"></span>
+        </div>
+        <div class="book-grid" id="books-grid"></div>
+      </div>
+      <!-- List view -->
+      <div id="books-list-view" style="display:none">
+        <div class="card">
+          <div class="card-head"><h3>All Books <span class="card-meta" id="book-count"></span></h3></div>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Cover</th><th>ID</th><th>Title</th><th>Author</th><th>Genre</th><th>ISBN</th><th>MRP</th><th>Copies</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="books-tbody"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REQUESTS ══ -->
+    <div class="section" id="sec-requests">
+      <div class="sec-head"><h2>Book Requests</h2></div>
+      <div class="filters">
+        <div class="search-wrap"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="req-q" placeholder="Search by title or member…" oninput="renderRequests()"></div>
+        <select id="req-sf" onchange="renderRequests()"><option value="">All</option><option value="PENDING">Pending</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select>
+      </div>
+      <div class="req-grid" id="req-grid"></div>
+    </div>
+
+    <!-- ══ ISSUES ══ -->
+    <div class="section" id="sec-issues">
+      <div class="sec-head">
+        <h2>Borrowing History</h2>
+        <button class="btn btn-primary" onclick="openModal('modal-issue')"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Issue Book</button>
+      </div>
+      <div class="filters">
+        <div class="search-wrap"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="iss-q" placeholder="Search member email or book title…" oninput="renderIssues()"></div>
+        <select id="iss-sf" onchange="renderIssues()"><option value="">All</option><option value="active">Active</option><option value="returned">Returned</option><option value="overdue">Overdue</option></select>
+      </div>
+      <div class="hist-list" id="issues-list"></div>
+    </div>
+
+    <!-- ══ OVERDUE ══ -->
+    <div class="section" id="sec-overdue">
+      <div class="sec-head"><h2>Overdue &amp; Fines</h2></div>
+      <div class="three-col" style="margin-bottom:18px">
+        <div class="stat-card red"><div class="stat-top"><div class="stat-label">Total Overdue</div><div class="stat-ico red"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div></div><div class="stat-val" id="ov-count">—</div><div class="stat-sub">Unreturned &amp; late</div></div>
+        <div class="stat-card yellow"><div class="stat-top"><div class="stat-label">Accumulated Fines</div><div class="stat-ico yellow"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div></div><div class="stat-val" id="ov-fines">—</div><div class="stat-sub">₹10/day + damage</div></div>
+        <div class="stat-card green"><div class="stat-top"><div class="stat-label">Fines Collected</div><div class="stat-ico green"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div></div><div class="stat-val" id="ov-collected">—</div><div class="stat-sub">All time</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Overdue — sorted by urgency</h3></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Issue #</th><th>Member</th><th>Book</th><th>Due Date</th><th>Days Late</th><th>Est. Fine</th><th>Action</th></tr></thead>
+          <tbody id="ov-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══ MEMBERS ══ -->
+    <div class="section" id="sec-members">
+      <div class="sec-head">
+        <h2>All Members</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-teal btn-sm" onclick="openAssignPlan()">Assign Plan</button>
+          <button class="btn btn-outline btn-sm" onclick="loadMembers()">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="three-col" style="margin-bottom:18px">
+        <div class="stat-card teal"><div class="stat-top"><div class="stat-label">Total Members</div><div class="stat-ico teal"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div></div><div class="stat-val" id="mem-total">—</div><div class="stat-sub">Registered users</div></div>
+        <div class="stat-card green"><div class="stat-top"><div class="stat-label">Active Plans</div><div class="stat-ico green"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div></div><div class="stat-val" id="mem-active-plans">—</div><div class="stat-sub">Valid memberships</div></div>
+        <div class="stat-card red"><div class="stat-top"><div class="stat-label">No / Expired Plans</div><div class="stat-ico red"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div></div><div class="stat-val" id="mem-no-plans">—</div><div class="stat-sub">Need renewal</div></div>
+      </div>
+      <div class="filters">
+        <div class="search-wrap"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="mem-q" placeholder="Search by name or email…" oninput="renderMembers()"></div>
+        <select id="mem-plan-f" onchange="renderMembers()"><option value="">All Members</option><option value="active">Active Plan</option><option value="expired">Expired</option><option value="none">No Plan</option></select>
+      </div>
+      <div class="user-grid" id="user-grid"></div>
+    </div>
+
+    <!-- ══ PLANS ══ -->
+    <div class="section" id="sec-plans">
+      <div class="sec-head">
+        <h2>Membership Plans</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="openAssignPlan()">Assign to Member</button>
+          <button class="btn btn-primary" onclick="openModal('modal-plan')"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>New Plan</button>
+        </div>
+      </div>
+      <div class="plan-grid" id="plan-grid"></div>
+    </div>
+
+    <!-- ══ PAYMENTS ══ -->
+    <div class="section" id="sec-payments">
+      <div class="sec-head">
+        <h2>Payment History</h2>
+        <button class="btn btn-outline btn-sm" onclick="loadPayments()">↻ Refresh</button>
+      </div>
+      <div class="three-col" style="margin-bottom:18px">
+        <div class="stat-card green">
+          <div class="stat-top"><div class="stat-label">Total Collected</div><div class="stat-ico green"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div></div>
+          <div class="stat-val" id="pay-total">₹0</div>
+          <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-top"><div class="stat-label">Transactions</div><div class="stat-ico blue"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div></div>
+          <div class="stat-val" id="pay-count">0</div>
+          <div class="stat-sub">Payments made</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-top"><div class="stat-label">Avg Payment</div><div class="stat-ico yellow"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></div></div>
+          <div class="stat-val" id="pay-avg">₹0</div>
+          <div class="stat-sub">Per transaction</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>All Transactions</h3>
+          <div class="filters" style="margin-bottom:0">
+            <div class="search-wrap" style="min-width:180px">
+              <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+              <input type="text" id="pay-q" placeholder="Search by User ID or method…" oninput="renderPayments()">
+            </div>
+            <select id="pay-method-f" onchange="renderPayments()">
+              <option value="">All Methods</option>
+              <option value="CARD">Card</option>
+              <option value="CASH">Cash</option>
+            </select>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User ID</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Date &amp; Time</th>
+              </tr>
+            </thead>
+            <tbody id="pay-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN: VERIFY USERS ══ -->
+    <div class="section" id="sec-admin">
+      <div class="sec-head">
+        <h2>Admin — Pending User Verifications</h2>
+        <button class="btn btn-outline btn-sm" onclick="loadPendingUsers()">↻ Refresh</button>
+      </div>
+      <div class="info-box" style="margin-bottom:16px">
+        📋 Users who have registered but are pending approval. On verification, a temporary password is auto-generated and emailed to them.
+      </div>
+      <div class="pending-user-grid" id="pending-user-grid">
+        <div style="text-align:center;padding:48px;color:var(--muted2)">Loading pending users…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT BOOK -->
+<div class="modal-backdrop" id="modal-book">
+  <div class="modal">
+    <div class="modal-head"><h3 id="book-modal-ttl">Add New Book</h3><button class="modal-close" onclick="closeModal('modal-book')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="b-id">
+      <div class="form-row">
+        <div class="form-group"><label>Title *</label><input type="text" id="b-title" placeholder="Book title"></div>
+        <div class="form-group"><label>Author *</label><input type="text" id="b-author" placeholder="Author name"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Genre</label><input type="text" id="b-genre" placeholder="e.g. Fiction, Science"></div>
+        <div class="form-group"><label>ISBN</label><input type="text" id="b-isbn" placeholder="ISBN number"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>MRP (₹)</label><input type="number" id="b-mrp" placeholder="0.00" min="0" step="0.01"><div class="hint">Used for damage fine = full MRP</div></div>
+        <div class="form-group"><label>Total Copies *</label><input type="number" id="b-copies" placeholder="1" min="1"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Cover Image (optional)</label>
+          <div class="img-upload-wrap" id="cover-upload-wrap">
+            <img class="img-upload-preview" id="cover-preview" src="" alt="Preview">
+            <div class="img-upload-inner" id="cover-upload-inner">
+              <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              <span>Click to upload or drag &amp; drop<br><em style="font-size:.69rem;color:var(--muted2)">JPG, PNG, WEBP</em></span>
+            </div>
+            <input type="file" id="b-cover" accept="image/*" onchange="previewCover(this)">
+          </div>
+          <div class="hint" id="cover-current-hint" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-book')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBook()"><svg viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>Save Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ISSUE BOOK -->
+<div class="modal-backdrop" id="modal-issue">
+  <div class="modal">
+    <div class="modal-head"><h3>Issue Book to Member</h3><button class="modal-close" onclick="closeModal('modal-issue')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Book Title *</label>
+          <input type="text" id="i-bookTitle" placeholder="Exact book title">
+          <div class="hint">Case-insensitive match against catalogue</div>
+        </div>
+        <div class="form-group">
+          <label>Member Email *</label>
+          <input type="email" id="i-userName" placeholder="member@email.com">
+          <div class="hint">Lookup is by email address</div>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Custom Due Date (optional — leave blank for 14 days)</label>
+          <input type="date" id="i-dueDate">
+        </div>
+      </div>
+      <div class="info-box">📧 A confirmation email is sent to the member automatically. Fine rate: ₹10/day if overdue.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-issue')">Cancel</button>
+      <button class="btn btn-primary" onclick="issueBook()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Issue Book</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RETURN BOOK -->
+<div class="modal-backdrop" id="modal-return">
+  <div class="modal sm">
+    <div class="modal-head"><h3>Process Book Return</h3><button class="modal-close" onclick="closeModal('modal-return')">✕</button></div>
+    <div class="modal-body">
+      <div class="danger-box" id="return-info" style="margin-bottom:14px"></div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Book condition</label>
+        <select id="r-damaged">
+          <option value="false">Good — overdue fine only (₹10/day)</option>
+          <option value="true">Damaged — charge full MRP as fine</option>
+        </select>
+        <div class="hint">Damaged = fine is full book MRP</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-return')">Cancel</button>
+      <button class="btn btn-success" id="return-confirm-btn"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NEW PLAN -->
+<div class="modal-backdrop" id="modal-plan">
+  <div class="modal">
+    <div class="modal-head"><h3>Create Membership Plan</h3><button class="modal-close" onclick="closeModal('modal-plan')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Plan Name *</label><input type="text" id="p-name" placeholder="e.g. Basic, Premium"></div>
+        <div class="form-group"><label>Duration (days) *</label><input type="number" id="p-duration" placeholder="30" min="1"><div class="hint">Expiry = today + duration</div></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Max Books at a Time</label><input type="number" id="p-maxbooks" placeholder="3" min="1"></div>
+        <div class="form-group"><label>Price (₹)</label><input type="number" id="p-price" placeholder="199" min="0"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Description</label><textarea id="p-desc" placeholder="What's included…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-plan')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePlan()"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Create Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ASSIGN PLAN -->
+<div class="modal-backdrop" id="modal-assign">
+  <div class="modal sm">
+    <div class="modal-head"><h3>Assign Plan to Member</h3><button class="modal-close" onclick="closeModal('modal-assign')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Member (User) ID *</label><input type="number" id="a-userId" placeholder="Enter member ID"><div class="hint">Find ID from All Members page</div></div>
+      <div class="form-group"><label>Select Plan *</label><select id="a-planId"></select></div>
+      <div class="info-box" style="margin-top:4px">Membership start = today. Expiry = today + plan duration.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-assign')">Cancel</button>
+      <button class="btn btn-primary" onclick="assignPlan()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Assign</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ CONFIG ═══ */
+const API = 'http://localhost:8080/api';
+const COVERS = 'http://localhost:8080/uploads/'; // static served path for book covers
+
+/* ═══ STATE ═══ */
+let books=[], issues=[], requests=[], plans=[], members=[], pendingUsers=[], payments=[];
+let pendingReturnId=null, editingBookId=null;
+let currentUser = null;
+let bookView = 'grid'; // 'grid' | 'list'
+
+/* ═══ INIT USER ═══ */
+function initUser(){
+  try {
+    const stored = sessionStorage.getItem('libraryUser') || localStorage.getItem('libraryUser');
+    if(stored) currentUser = JSON.parse(stored);
+  } catch(e){}
+
+  const name = currentUser
+    ? ((currentUser.firstName||'')+(currentUser.lastName?' '+currentUser.lastName:'')).trim() || currentUser.email || 'Librarian'
+    : 'Librarian';
+  const initials = name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || 'LB';
+  const role = currentUser?.role || 'LIBRARIAN';
+
+  document.getElementById('sidebar-av').textContent = initials;
+  document.getElementById('sidebar-name').textContent = name;
+  document.getElementById('sidebar-role').textContent = role.charAt(0)+role.slice(1).toLowerCase();
+  document.getElementById('welcome-heading').textContent = `Good day, ${name.split(' ')[0]}! 👋`;
+}
+
+function doLogout(){
+  if(!confirm('Logout?')) return;
+  sessionStorage.removeItem('libraryUser');
+  localStorage.removeItem('libraryUser');
+  location.href='login.html';
+}
+
+/* ═══ DATE ═══ */
+document.getElementById('today-str').textContent =
+  new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+/* ═══ NAV ═══ */
+const pageTitles = {
+  dashboard:'Dashboard', books:'Book Catalogue', requests:'Book Requests',
+  issues:'Borrowing History', overdue:'Overdue & Fines', payments:'Payment History',
+  members:'All Members', plans:'Membership Plans', admin:'Admin — Verify Users'
+};
+function nav(id, el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(n=>{
+    if((n.getAttribute('onclick')||'').includes("'"+id+"'")) n.classList.add('active');
+  });
+  document.getElementById('page-title').textContent = pageTitles[id]||id;
+  const renders={
+    dashboard:renderDashboard, books:renderBooks, requests:renderRequests,
+    issues:renderIssues, overdue:renderOverdue, payments:renderPayments,
+    members:renderMembers, plans:renderPlans, admin:loadPendingUsers
+  };
+  if(renders[id]) renders[id]();
+}
+
+/* ═══ BOOK VIEW TOGGLE ═══ */
+function setBookView(v){
+  bookView = v;
+  document.getElementById('books-grid-view').style.display = v==='grid'?'block':'none';
+  document.getElementById('books-list-view').style.display = v==='list'?'block':'none';
+  document.getElementById('view-grid-btn').classList.toggle('active', v==='grid');
+  document.getElementById('view-list-btn').classList.toggle('active', v==='list');
+  renderBooks();
+}
+
+/* ═══ MODAL ═══ */
+function openModal(id){ document.getElementById(id).classList.add('open') }
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+document.querySelectorAll('.modal-backdrop').forEach(b=>
+  b.addEventListener('click',e=>{ if(e.target===b) b.classList.remove('open') }));
+
+/* ═══ IMAGE VIEWER ═══ */
+function openImgViewer(src){
+  document.getElementById('img-viewer-src').src=src;
+  document.getElementById('img-viewer').classList.add('open');
+}
+function closeImgViewer(){
+  document.getElementById('img-viewer').classList.remove('open');
+}
+
+/* ═══ COVER PREVIEW ═══ */
+function previewCover(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('cover-preview');
+    const inner = document.getElementById('cover-upload-inner');
+    preview.src = e.target.result;
+    preview.classList.add('show');
+    inner.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══ TOAST ═══ */
+function toast(msg, type='info'){
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  const ic={
+    success:'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>',
+    error:'<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
+    info:'<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>'
+  };
+  t.innerHTML=`<svg viewBox="0 0 24 24">${ic[type]||ic.info}</svg>${esc(msg)}`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3800);
+}
+
+/* ═══ HELPERS ═══ */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function fmtDate(d){
+  if(!d) return '—';
+  try{ return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) }
+  catch{ return d }
+}
+function daysLate(due){
+  const d=new Date(due), n=new Date();
+  d.setHours(0,0,0,0); n.setHours(0,0,0,0);
+  return Math.max(0, Math.floor((n-d)/86400000));
+}
+function isOD(i){ return !i.returned && daysLate(i.dueDate)>0 }
+function mName(i){
+  if(!i.user) return '—';
+  return ((i.user.firstName||'')+' '+(i.user.lastName||'')).trim() || i.user.email || '—';
+}
+function mEmail(i){ return i.user?.email || '—' }
+function bTitle(i){ return i.book ? i.book.title : '—' }
+function statusBadge(b){
+  const s=b.status||(b.availableCopies===0?'ISSUED':b.availableCopies<b.totalCopies?'PARTIAL':'AVAILABLE');
+  if(s==='AVAILABLE') return`<span class="badge badge-success"><span class="dot"></span>Available</span>`;
+  if(s==='PARTIAL')   return`<span class="badge badge-warning"><span class="dot"></span>Partial</span>`;
+  return`<span class="badge badge-danger"><span class="dot"></span>All Issued</span>`;
+}
+function reqBadge(s){
+  if(s==='APPROVED') return`<span class="badge badge-success">Approved</span>`;
+  if(s==='REJECTED') return`<span class="badge badge-danger">Rejected</span>`;
+  return`<span class="badge badge-warning">Pending</span>`;
+}
+function membershipStatus(u){
+  if(!u.membershipPlan) return {cls:'no-plan', badge:`<span class="badge badge-gray">No Plan</span>`, avCls:'blue'};
+  const expiry = u.membershipExpiryDate ? new Date(u.membershipExpiryDate) : null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  if(expiry && expiry < today)
+    return {cls:'expired', badge:`<span class="badge badge-danger"><span class="dot"></span>Expired</span>`, avCls:'purple'};
+  return {cls:'active-mem', badge:`<span class="badge badge-success"><span class="dot"></span>Active</span>`, avCls:'green'};
+}
+function coverUrl(b){
+  if(!b || !b.coverImage || b.coverImage==='default.png') return null;
+  return COVERS + b.coverImage;
+}
+function bookCoverImg(b, cls='book-thumb'){
+  const url = coverUrl(b);
+  if(url) return `<img src="${url}" class="${cls}" alt="${esc(b.title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy">`;
+  return '';
+}
+
+/* ═══ API WRAPPER ═══ */
+async function api(path, opts={}){
+  const r = await fetch(API+path, opts);
+  if(!r.ok){
+    let t=''; try{ t=await r.text() }catch{}
+    throw new Error(t || r.status);
+  }
+  if(r.status===204 || opts.method==='DELETE') return null;
+  const ct=r.headers.get('content-type')||'';
+  return ct.includes('json') ? r.json() : r.text();
+}
+
+/* ═══ LOAD ALL DATA ═══ */
+async function loadAll(){
+  try{ [books, issues] = await Promise.all([api('/books'), api('/issues')]) }
+  catch(e){ toast('Failed to load books/issues: '+e.message,'error') }
+  try{ requests = await api('/requests') } catch{ requests=[] }
+  try{ plans = await api('/plans') } catch{ plans=[] }
+  try{ payments = await api('/payment/all') } catch{ payments=[] }
+}
+
+async function loadPayments(){
+  try{
+    payments = await api('/payment/all');
+    renderPayments();
+  } catch(e){
+    toast('Failed to load payments: '+e.message,'error');
+  }
+}
+
+async function loadMembers(){
+  try{
+    members = await api('/membership-status');
+    renderMembers();
+  } catch(e){
+    toast('Failed to load members: '+e.message,'error');
+    members=[];
+    renderMembers();
+  }
+}
+
+async function loadPendingUsers(){
+  const g = document.getElementById('pending-user-grid');
+  g.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted2)">Loading…</div>';
+  try{
+    pendingUsers = await api('/admin/pending-users');
+    renderPendingUsers();
+  } catch(e){
+    toast('Failed to load pending users: '+e.message,'error');
+    pendingUsers=[];
+    g.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted2)">Could not load pending users.</div>';
+  }
+}
+
+/* ═══ BOOKS ═══ */
+function openAddBook(){
+  editingBookId=null;
+  document.getElementById('book-modal-ttl').textContent='Add New Book';
+  ['b-id','b-title','b-author','b-genre','b-isbn','b-mrp','b-copies'].forEach(id=>document.getElementById(id).value='');
+  // reset cover preview
+  const preview = document.getElementById('cover-preview');
+  preview.src=''; preview.classList.remove('show');
+  document.getElementById('cover-upload-inner').classList.remove('has-img');
+  document.getElementById('b-cover').value='';
+  document.getElementById('cover-current-hint').style.display='none';
+  openModal('modal-book');
+}
+function openEditBook(id){
+  const b=books.find(x=>x.id===id); if(!b) return;
+  editingBookId=id;
+  document.getElementById('book-modal-ttl').textContent='Edit Book';
+  document.getElementById('b-id').value=b.id;
+  document.getElementById('b-title').value=b.title||'';
+  document.getElementById('b-author').value=b.author||'';
+  document.getElementById('b-genre').value=b.genre||'';
+  document.getElementById('b-isbn').value=b.isbn||'';
+  document.getElementById('b-mrp').value=b.mrp||'';
+  document.getElementById('b-copies').value=b.totalCopies||'';
+  // reset cover UI
+  const preview = document.getElementById('cover-preview');
+  document.getElementById('b-cover').value='';
+  const url = coverUrl(b);
+  if(url){
+    preview.src=url; preview.classList.add('show');
+    document.getElementById('cover-upload-inner').classList.add('has-img');
+    document.getElementById('cover-current-hint').textContent='Current cover shown. Upload new image to replace it.';
+    document.getElementById('cover-current-hint').style.display='block';
+  } else {
+    preview.src=''; preview.classList.remove('show');
+    document.getElementById('cover-upload-inner').classList.remove('has-img');
+    document.getElementById('cover-current-hint').style.display='none';
+  }
+  openModal('modal-book');
+}
+
+// Book save uses multipart/form-data because backend expects @RequestParam + MultipartFile
+async function saveBook(){
+  const title=document.getElementById('b-title').value.trim();
+  const author=document.getElementById('b-author').value.trim();
+  const isbn=document.getElementById('b-isbn').value.trim();
+  const copies=parseInt(document.getElementById('b-copies').value)||0;
+  if(!title){ toast('Title required','error'); return }
+  if(!author){ toast('Author required','error'); return }
+  if(!isbn){ toast('ISBN required (backend requires this field)','error'); return }
+  if(copies<1){ toast('At least 1 copy required','error'); return }
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('author', author);
+  fd.append('isbn', isbn);
+  fd.append('totalCopies', copies);
+  const mrp = document.getElementById('b-mrp').value;
+  if(mrp) fd.append('mrp', mrp);
+  const genre = document.getElementById('b-genre').value.trim();
+  if(genre) fd.append('genre', genre);
+  const coverFile = document.getElementById('b-cover').files[0];
+  if(coverFile) fd.append('cover', coverFile);
+
+  try{
+    let result;
+    if(editingBookId){
+      result = await fetch(API+'/books/'+editingBookId, {method:'PUT', body:fd}).then(async r=>{
+        if(!r.ok){ const t=await r.text(); throw new Error(t||r.status) }
+        return r.json();
+      });
+      books=books.map(b=>b.id===editingBookId?result:b);
+      toast('Book updated!','success');
+    } else {
+      result = await fetch(API+'/books', {method:'POST', body:fd}).then(async r=>{
+        if(!r.ok){ const t=await r.text(); throw new Error(t||r.status) }
+        return r.json();
+      });
+      books.push(result);
+      toast('"'+result.title+'" added!','success');
+    }
+    closeModal('modal-book'); renderBooks(); renderDashboard();
+  } catch(e){ toast('Save failed: '+e.message,'error') }
+}
+
+async function deleteBook(id){
+  if(!id){ toast('Invalid book ID','error'); return }
+  const b=books.find(x=>x.id===id);
+  if(!confirm('Delete "'+(b?b.title:'this book')+'"? All its issue records will also be removed.')) return;
+  try{
+    await api('/books/'+id,{method:'DELETE'});
+    books=books.filter(b=>b.id!==id);
+    issues=issues.filter(i=>i.book?.id!==id);
+    toast('Deleted','success');
+    renderBooks(); renderDashboard();
+  } catch(e){ toast('Failed: '+e.message,'error') }
+}
+
+function renderBooks(){
+  const q=(document.getElementById('book-q').value||'').toLowerCase();
+  const sf=document.getElementById('book-sf').value;
+  const f=books.filter(b=>{
+    const mq=!q||(b.title||'').toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q)||(b.isbn||'').toLowerCase().includes(q)||(b.genre||'').toLowerCase().includes(q);
+    return mq&&(!sf||b.status===sf);
+  });
+
+  if(bookView==='grid'){
+    document.getElementById('book-count-grid').textContent=f.length+' books';
+    const g=document.getElementById('books-grid');
+    if(!f.length){
+      g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted2)">${books.length?'Nothing matches your search':'No books yet — add your first!'}</div>`;
+      return;
+    }
+    g.innerHTML=f.map(b=>{
+      const url=coverUrl(b);
+      const avail=b.availableCopies??0;
+      const total=b.totalCopies??0;
+      const copiesColor=avail===0?'var(--danger)':avail<total?'var(--accent)':'var(--success)';
+      return`<div class="book-card">
+        ${url
+          ? `<img class="book-card-cover" src="${url}" alt="${esc(b.title)}" loading="lazy" onclick="openImgViewer('${url}')"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : ''}
+        <div class="book-card-cover-placeholder" style="${url?'display:none':''}">
+          <svg viewBox="0 0 24 24"><path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/></svg>
+          <span>${esc(b.title)}</span>
+        </div>
+        <div class="book-card-body">
+          <div class="book-card-title" title="${esc(b.title)}">${esc(b.title)}</div>
+          <div class="book-card-author">${esc(b.author||'—')}</div>
+          <div class="book-card-foot">
+            ${statusBadge(b)}
+            <span class="copies-pill" style="color:${copiesColor}">${avail}/${total}</span>
+          </div>
+          ${b.genre?`<div style="margin-top:5px"><span class="badge badge-blue" style="font-size:.62rem">${esc(b.genre)}</span></div>`:''}
+          ${b.mrp!=null?`<div style="font-size:.71rem;color:var(--muted);margin-top:4px">MRP: ₹${Number(b.mrp).toFixed(2)}</div>`:''}
+          <div class="book-card-actions">
+            <button class="btn btn-outline btn-xs" onclick="openEditBook(${b.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteBook(${b.id})">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('book-count').textContent=f.length+' books';
+    const tb=document.getElementById('books-tbody');
+    if(!f.length){
+      tb.innerHTML=`<tr><td colspan="10" class="loading-row">${books.length?'Nothing matches your search':'No books yet — add your first!'}</td></tr>`;
+      return;
+    }
+    tb.innerHTML=f.map(b=>{
+      const url=coverUrl(b);
+      const avail=b.availableCopies??0; const total=b.totalCopies??0;
+      return`<tr>
+        <td>
+          <div class="book-cover-cell">
+            ${url
+              ? `<img src="${url}" class="book-thumb" alt="${esc(b.title)}" onclick="openImgViewer('${url}')" style="cursor:zoom-in" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                 <div class="book-thumb-placeholder" style="display:none">${(b.title||'?').charAt(0).toUpperCase()}</div>`
+              : `<div class="book-thumb-placeholder">${(b.title||'?').charAt(0).toUpperCase()}</div>`}
+          </div>
+        </td>
+        <td><code style="background:#eff6ff;padding:2px 7px;border-radius:5px;font-size:.72rem;font-weight:700;color:var(--primary)">${b.id}</code></td>
+        <td><strong>${esc(b.title)}</strong></td>
+        <td style="color:var(--muted)">${esc(b.author||'—')}</td>
+        <td>${b.genre?`<span class="badge badge-blue">${esc(b.genre)}</span>`:'<span style="color:var(--muted2)">—</span>'}</td>
+        <td style="font-size:.72rem;color:var(--muted2)">${esc(b.isbn||'—')}</td>
+        <td>${b.mrp!=null?'₹'+Number(b.mrp).toFixed(2):'—'}</td>
+        <td>
+          <span style="font-weight:700;color:${avail===0?'var(--danger)':avail<total?'var(--accent)':'var(--success)'}">${avail}</span>
+          <span style="color:var(--muted2)"> / ${total}</span>
+        </td>
+        <td>${statusBadge(b)}</td>
+        <td><div class="act-btns">
+          <button class="icon-btn" onclick="openEditBook(${b.id})" title="Edit">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          </button>
+          <button class="icon-btn del" onclick="deleteBook(${b.id})" title="Delete">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+/* ═══ ISSUE BOOK ═══ */
+async function issueBook(){
+  const bt=document.getElementById('i-bookTitle').value.trim();
+  const un=document.getElementById('i-userName').value.trim();
+  const dd=document.getElementById('i-dueDate').value;
+  if(!bt){ toast('Book title required','error'); return }
+  if(!un){ toast('Member email required','error'); return }
+  let url=`/issues?bookTitle=${encodeURIComponent(bt)}&userName=${encodeURIComponent(un)}`;
+  if(dd) url+=`&dueDate=${dd}`;
+  try{
+    const c=await api(url,{method:'POST'});
+    issues.push(c);
+    const bk=books.find(b=>b.title.toLowerCase()===bt.toLowerCase());
+    if(bk){ bk.availableCopies=Math.max(0,(bk.availableCopies||1)-1); bk.status=bk.availableCopies===0?'ISSUED':'PARTIAL'; }
+    closeModal('modal-issue');
+    ['i-bookTitle','i-userName','i-dueDate'].forEach(id=>document.getElementById(id).value='');
+    toast('Issued! Due: '+fmtDate(c.dueDate),'success');
+    renderDashboard(); renderBooks(); renderIssues();
+  } catch(e){ toast('Issue failed: '+e.message,'error') }
+}
+
+/* ═══ RETURN BOOK ═══ */
+function openReturnModal(issueId){
+  const i=issues.find(x=>x.id===issueId); if(!i) return;
+  const d=daysLate(i.dueDate);
+  document.getElementById('return-info').innerHTML=
+    `<strong>Issue #${i.id}</strong> — ${esc(bTitle(i))}<br>
+     Member: ${esc(mName(i))} (${esc(mEmail(i))})<br>
+     Due: ${fmtDate(i.dueDate)}<br>
+     ${d>0
+       ? `<br>⚠️ ${d} day${d!==1?'s':''} overdue — fine: ₹${d*10} (or MRP if damaged)`
+       : '✅ On time — no late fine if returned today'}`;
+  pendingReturnId=issueId;
+  document.getElementById('r-damaged').value='false';
+  document.getElementById('return-confirm-btn').onclick=confirmReturn;
+  openModal('modal-return');
+}
+async function confirmReturn(){
+  if(!pendingReturnId) return;
+  const damaged=document.getElementById('r-damaged').value==='true';
+  try{
+    const u=await api(`/issues/return/${pendingReturnId}?damaged=${damaged}`,{method:'POST'});
+    issues=issues.map(i=>i.id===pendingReturnId?u:i);
+    if(u.book){
+      const bk=books.find(b=>b.id===u.book.id);
+      if(bk){ bk.availableCopies=Math.min(bk.totalCopies,(bk.availableCopies||0)+1); bk.status=bk.availableCopies===bk.totalCopies?'AVAILABLE':'PARTIAL'; }
+    }
+    closeModal('modal-return');
+    toast((u.fine||0)>0?`Returned! Fine: ₹${u.fine}`:'Returned — no fine!','success');
+    pendingReturnId=null;
+    renderDashboard(); renderBooks(); renderIssues(); renderOverdue();
+  } catch(e){ toast('Return failed: '+e.message,'error') }
+}
+
+/* ═══ BOOK REQUESTS ═══ */
+async function updateReqStatus(id, status){
+  try{
+    const u=await api(`/requests/${id}?status=${status}`,{method:'PATCH'});
+    requests=requests.map(r=>r.id===id?u:r);
+    toast('Request '+status.toLowerCase()+'!','success');
+    renderRequests(); renderDashboard(); updateBadges();
+  } catch(e){ toast('Failed: '+e.message,'error') }
+}
+function renderRequests(){
+  const q=(document.getElementById('req-q').value||'').toLowerCase();
+  const sf=document.getElementById('req-sf').value;
+  const f=requests.filter(r=>{
+    const by=(r.requestedBy?.firstName||'')+' '+(r.requestedBy?.lastName||'');
+    const mq=!q||(r.bookTitle||'').toLowerCase().includes(q)||by.toLowerCase().includes(q);
+    return mq&&(!sf||r.status===sf);
+  });
+  const g=document.getElementById('req-grid');
+  if(!f.length){
+    g.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg><p>${requests.length?'No results match filter':'No requests submitted yet'}</p></div>`;
+    return;
+  }
+  g.innerHTML=f.map(r=>{
+    const st=(r.status||'PENDING').toLowerCase();
+    const by=r.requestedBy ? (r.requestedBy.firstName||'')+(r.requestedBy.lastName?' '+r.requestedBy.lastName:'') : 'Unknown';
+    return`<div class="req-card ${st}">
+      <div class="req-title">${esc(r.bookTitle||'—')}</div>
+      <div class="req-author">by ${esc(r.author||'—')}</div>
+      ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
+      <div class="req-footer">
+        <div>
+          <span class="req-by">by <strong>${esc(by)}</strong></span><br>
+          <span style="font-size:.69rem;color:var(--muted2)">${fmtDate(r.requestDate)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px">
+          ${reqBadge(r.status)}
+          ${r.status==='PENDING'
+            ? `<button class="btn btn-success btn-xs" onclick="updateReqStatus(${r.id},'APPROVED')">✓</button>
+               <button class="btn btn-danger btn-xs" onclick="updateReqStatus(${r.id},'REJECTED')">✕</button>`
+            : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══ ISSUES / HISTORY ═══ */
+function renderIssues(){
+  const q=(document.getElementById('iss-q').value||'').toLowerCase();
+  const sf=document.getElementById('iss-sf').value;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const f=[...issues].reverse().filter(i=>{
+    const mq=!q||mName(i).toLowerCase().includes(q)||mEmail(i).toLowerCase().includes(q)||bTitle(i).toLowerCase().includes(q);
+    const od=!i.returned&&new Date(i.dueDate)<today;
+    const ms=!sf
+      ||(sf==='active'  && !i.returned && !od)
+      ||(sf==='returned'&& i.returned)
+      ||(sf==='overdue' && od);
+    return mq&&ms;
+  });
+  const list=document.getElementById('issues-list');
+  if(!f.length){
+    list.innerHTML=`<div style="text-align:center;padding:48px;color:var(--muted2)">${issues.length?'No results match your filter':'No borrowing history yet'}</div>`;
+    return;
+  }
+  list.innerHTML=f.map(i=>{
+    const od=!i.returned&&new Date(i.dueDate)<today;
+    const days=od?daysLate(i.dueDate):0;
+    const cls=i.returned?'done':od?'late':'active';
+    const path=i.returned
+      ?'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>'
+      :od
+        ?'<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>'
+        :'<path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/>';
+    const badge=i.returned
+      ?`<span class="badge badge-gray">Returned</span>`
+      :od
+        ? i.finePaid
+          ? `<span class="badge badge-success"><span class="dot"></span>Fine Paid</span>`
+          : `<div class="hist-fine">₹${i.fine&&i.fine>0?i.fine:days*10}</div>`
+        :`<span class="badge badge-success">Active</span>`;
+    const retBtn=!i.returned
+      ?`<button class="btn btn-success btn-xs" onclick="openReturnModal(${i.id})">↩ Return</button>`:'';
+    // book cover mini
+    const bkCover = i.book && coverUrl(i.book)
+      ? `<img src="${coverUrl(i.book)}" style="width:28px;height:38px;object-fit:cover;border-radius:4px;margin-right:4px;vertical-align:middle;box-shadow:0 1px 4px rgba(0,0,0,.14)" loading="lazy">`
+      : '';
+    return`<div class="hist-item">
+      <div class="hist-ico ${cls}"><svg viewBox="0 0 24 24">${path}</svg></div>
+      <div class="hist-body">
+        <div class="hist-title">
+          ${esc(mName(i))} — ${bkCover}<em>"${esc(bTitle(i))}"</em> ${retBtn}
+        </div>
+        <div class="hist-meta">
+          <span>#${i.id}</span>
+          <span>${esc(mEmail(i))}</span>
+          <span>Issued ${fmtDate(i.issueDate)}</span>
+          ${i.returned
+            ?`<span>Returned ${fmtDate(i.returnDate)}</span>`
+            :`<span>Due ${fmtDate(i.dueDate)}</span>`}
+          ${od?`<span style="color:var(--danger);font-weight:600">${days}d overdue</span>`:''}
+          ${i.returned&&i.fine>0?`<span style="color:var(--danger)">Fine ₹${i.fine}</span>`:''}
+          ${od&&i.finePaid?`<span style="color:var(--success);font-weight:600">✓ Fine paid online</span>`:''}
+        </div>
+      </div>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+/* ═══ OVERDUE ═══ */
+function renderOverdue(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const ov=issues.filter(i=>!i.returned&&new Date(i.dueDate)<today);
+  const totalF=ov.filter(i=>!i.finePaid).reduce((s,i)=>s+daysLate(i.dueDate)*10, 0);
+  // Use actual payment records for "Fines Collected" — more accurate than guessing from returned issues
+  const coll=payments.filter(p=>p.status==='SUCCESS').reduce((s,p)=>s+(p.amount||0), 0);
+  document.getElementById('ov-count').textContent=ov.length;
+  document.getElementById('ov-fines').textContent='₹'+totalF;
+  document.getElementById('ov-collected').textContent='₹'+coll.toFixed(0);
+  const tb=document.getElementById('ov-tbody');
+  tb.innerHTML='';
+  if(!ov.length){
+    tb.innerHTML='<tr><td colspan="7" class="loading-row">🎉 No overdue books right now!</td></tr>';
+    return;
+  }
+  [...ov].sort((a,b)=>daysLate(b.dueDate)-daysLate(a.dueDate)).forEach(i=>{
+    const d=daysLate(i.dueDate);
+    // If fine was already paid online, show badge and disable return button change
+    const finePaidBadge = i.finePaid
+      ? `<span class="badge badge-success" style="margin-right:4px"><span class="dot"></span>Fine Paid</span>`
+      : '';
+    const fineDisplay = i.finePaid
+      ? `<span style="text-decoration:line-through;color:var(--muted2)">₹${d*10}</span> ${finePaidBadge}`
+      : `<strong style="color:var(--danger)">₹${d*10}+</strong>`;
+    tb.innerHTML+=`<tr class="overdue-row">
+      <td><code style="background:#fee2e2;padding:2px 7px;border-radius:5px;font-size:.72rem;color:#991b1b;font-weight:700">#${i.id}</code></td>
+      <td><div style="font-weight:600">${esc(mName(i))}</div><div style="font-size:.71rem;color:var(--muted2)">${esc(mEmail(i))}</div></td>
+      <td>${esc(bTitle(i))}</td>
+      <td style="color:var(--muted)">${fmtDate(i.dueDate)}</td>
+      <td><strong style="color:var(--danger)">${d} day${d!==1?'s':''}</strong></td>
+      <td>${fineDisplay}</td>
+      <td><button class="btn btn-success btn-sm" onclick="openReturnModal(${i.id})">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>${i.finePaid ? 'Return Book' : 'Return &amp; Pay'}
+      </button></td>
+    </tr>`;
+  });
+}
+
+/* ═══ MEMBERS ═══ */
+function renderMembers(){
+  const q=(document.getElementById('mem-q').value||'').toLowerCase();
+  const pf=document.getElementById('mem-plan-f').value;
+  const today=new Date(); today.setHours(0,0,0,0);
+
+  const f=members.filter(u=>{
+    const fn=(u.firstName||'').toLowerCase(), ln=(u.lastName||'').toLowerCase();
+    const em=(u.email||'').toLowerCase();
+    const mq=!q||fn.includes(q)||ln.includes(q)||em.includes(q);
+    const expiry=u.membershipExpiryDate?new Date(u.membershipExpiryDate):null;
+    const hasPlan=!!u.membershipPlan;
+    const expired=hasPlan&&expiry&&expiry<today;
+    const active=hasPlan&&(!expiry||expiry>=today);
+    const ms=!pf
+      ||(pf==='active'  && active)
+      ||(pf==='expired' && expired)
+      ||(pf==='none'    && !hasPlan);
+    return mq&&ms;
+  });
+
+  const activePlanCount=members.filter(u=>{
+    if(!u.membershipPlan) return false;
+    const exp=u.membershipExpiryDate?new Date(u.membershipExpiryDate):null;
+    return !exp||exp>=today;
+  }).length;
+  const noOrExpired=members.length-activePlanCount;
+  document.getElementById('mem-total').textContent=members.length;
+  document.getElementById('mem-active-plans').textContent=activePlanCount;
+  document.getElementById('mem-no-plans').textContent=noOrExpired;
+
+  const memBadge=document.getElementById('mem-badge');
+  memBadge.textContent=noOrExpired;
+  memBadge.style.display=noOrExpired>0?'inline':'none';
+
+  const g=document.getElementById('user-grid');
+  if(!f.length){
+    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted2)">${members.length?'No members match filter':'No members found'}</div>`;
+    return;
+  }
+
+  g.innerHTML=f.map((u,idx)=>{
+    const {cls, badge, avCls}=membershipStatus(u);
+    const name=((u.firstName||'')+(u.lastName?' '+u.lastName:'')).trim()||'Unknown';
+    const initials=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
+    const planName=u.membershipPlan?.planName||u.membershipPlan?.name||'';
+    return`<div class="user-card ${cls}">
+      <div class="user-av ${avCls}">${initials}</div>
+      <div class="user-info">
+        <div class="user-name">${esc(name)}</div>
+        <div class="user-email" title="${esc(u.email||'')}">${esc(u.email||'—')}</div>
+        <div style="margin-bottom:4px">${badge}</div>
+        ${u.membershipPlan?`
+          <div class="user-plan-info">
+            <div class="user-plan-name">📋 ${esc(planName)}</div>
+            <div class="user-plan-dates">
+              ${u.membershipStartDate?'From '+fmtDate(u.membershipStartDate):''}
+              ${u.membershipExpiryDate?' → '+fmtDate(u.membershipExpiryDate):''}
+            </div>
+          </div>`:
+          `<div style="font-size:.73rem;color:var(--muted2)">No plan assigned</div>`
+        }
+        <div class="user-actions">
+          <button class="btn btn-outline btn-xs" onclick="quickAssign(${u.id})">Assign Plan</button>
+          ${u.id?`<span style="font-size:.69rem;color:var(--muted2);align-self:center">ID: ${u.id}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function quickAssign(userId){
+  const s=document.getElementById('a-planId');
+  s.innerHTML=plans.length
+    ?plans.map(p=>`<option value="${p.id}">${esc(p.planName||p.name||'Plan #'+p.id)} (${p.durationInDays||'?'}d)</option>`).join('')
+    :'<option disabled>No plans — create one first</option>';
+  document.getElementById('a-userId').value=userId;
+  openModal('modal-assign');
+}
+
+/* ═══ PLANS ═══ */
+async function savePlan(){
+  const name=document.getElementById('p-name').value.trim();
+  const dur=parseInt(document.getElementById('p-duration').value)||0;
+  if(!name){ toast('Plan name required','error'); return }
+  if(!dur){ toast('Duration required','error'); return }
+  const payload={
+    planName:name, durationInDays:dur,
+    maxBooksAllowed:parseInt(document.getElementById('p-maxbooks').value)||3,
+    price:parseFloat(document.getElementById('p-price').value)||0,
+    description:document.getElementById('p-desc').value
+  };
+  try{
+    const c=await api('/plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    plans.push(c);
+    closeModal('modal-plan');
+    toast('"'+name+'" plan created!','success');
+    renderPlans();
+  } catch(e){ toast('Failed: '+e.message,'error') }
+}
+function openAssignPlan(){
+  const s=document.getElementById('a-planId');
+  s.innerHTML=plans.length
+    ?plans.map(p=>`<option value="${p.id}">${esc(p.planName||p.name||'Plan #'+p.id)} (${p.durationInDays||'?'}d)</option>`).join('')
+    :'<option disabled>No plans — create one first</option>';
+  document.getElementById('a-userId').value='';
+  openModal('modal-assign');
+}
+async function assignPlan(){
+  const uid=parseInt(document.getElementById('a-userId').value);
+  const pid=parseInt(document.getElementById('a-planId').value);
+  if(!uid){ toast('Member ID required','error'); return }
+  if(!pid){ toast('Select a plan','error'); return }
+  try{
+    await api(`/members/${uid}/assign-plan/${pid}`,{method:'POST'});
+    closeModal('modal-assign');
+    toast('Plan assigned!','success');
+    await loadMembers();
+  } catch(e){ toast('Failed: '+e.message,'error') }
+}
+function renderPlans(){
+  const g=document.getElementById('plan-grid');
+  if(!plans.length){
+    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted2)">No membership plans yet — create your first!</div>`;
+    return;
+  }
+  const colors=['blue','green','purple','teal'];
+  g.innerHTML=plans.map((p,idx)=>`
+    <div class="plan-card">
+      <div class="plan-badge"><span class="badge badge-${colors[idx%colors.length]}">${p.durationInDays||'?'}d</span></div>
+      <div class="plan-name">${esc(p.planName||p.name||'Plan')}</div>
+      <div class="plan-price">₹${p.price||0}<span> / plan</span></div>
+      <ul class="plan-features">
+        <li>Duration: <strong>${p.durationInDays||'—'} days</strong></li>
+        <li>Max books: <strong>${p.maxBooksAllowed||'—'} at a time</strong></li>
+        ${p.description?`<li>${esc(p.description)}</li>`:''}
+      </ul>
+      <div class="plan-actions">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="openAssignPlan()">Assign to Member</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ═══ ADMIN: PENDING USERS ═══ */
+async function verifyUser(id){
+  if(!confirm('Verify this user? A temporary password will be emailed to them.')) return;
+  try{
+    const msg = await api('/admin/verify/'+id, {method:'POST'});
+    toast(typeof msg==='string'?msg:'User verified! Password emailed.','success');
+    pendingUsers = pendingUsers.filter(u=>u.id!==id);
+    renderPendingUsers();
+    updateAdminBadge();
+    // Optionally refresh members
+    await loadMembers();
+  } catch(e){ toast('Verification failed: '+e.message,'error') }
+}
+
+function renderPendingUsers(){
+  const g=document.getElementById('pending-user-grid');
+  updateAdminBadge();
+  if(!pendingUsers.length){
+    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted2)">
+      <div style="font-size:2rem;margin-bottom:8px">✅</div>
+      <p style="font-weight:600;font-size:.9rem;margin-bottom:4px">All caught up!</p>
+      <p style="font-size:.79rem">No pending user verifications.</p>
+    </div>`;
+    return;
+  }
+  g.innerHTML=pendingUsers.map(u=>{
+    const name=((u.firstName||'')+(u.lastName?' '+u.lastName:'')).trim()||'Unknown';
+    const initials=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
+    const hasIdProof = u.idProofPath && u.idProofPath.length>0;
+    return`<div class="pending-user-card">
+      <div class="pu-head">
+        <div class="pu-av">${initials}</div>
+        <div>
+          <div class="pu-name">${esc(name)}</div>
+          <div class="pu-email">${esc(u.email||'—')}</div>
+        </div>
+        <span class="badge badge-warning" style="margin-left:auto">Pending</span>
+      </div>
+      <div class="pu-details">
+        ${u.phone?`<p>📞 ${esc(u.phone)}</p>`:''}
+        ${u.address?`<p>📍 ${esc(u.address)}</p>`:''}
+        <p>🆔 ID Proof: ${hasIdProof
+          ?`<a href="http://localhost:8080/${u.idProofPath.replace(/\\/g,'/')}" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:none">View PDF ↗</a>`
+          :'Not uploaded'}</p>
+        <p style="margin-top:4px;font-size:.7rem;color:var(--muted2)">User ID: ${u.id}</p>
+      </div>
+      <div class="pu-actions">
+        <button class="btn btn-success btn-sm" style="flex:1" onclick="verifyUser(${u.id})">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Verify &amp; Send Password
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateAdminBadge(){
+  const b=document.getElementById('admin-badge');
+  b.textContent=pendingUsers.length;
+  b.style.display=pendingUsers.length>0?'inline':'none';
+}
+
+/* ═══ DASHBOARD ═══ */
+function renderDashboard(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const act=issues.filter(i=>!i.returned);
+  const ov=issues.filter(i=>!i.returned&&new Date(i.dueDate)<today);
+  const fines=ov.filter(i=>!i.finePaid).reduce((s,i)=>s+daysLate(i.dueDate)*10, 0);
+  document.getElementById('s-books').textContent=books.length;
+  document.getElementById('s-active').textContent=act.length;
+  document.getElementById('s-overdue').textContent=ov.length;
+  document.getElementById('s-fines').textContent='₹'+fines;
+
+  // recent
+  const rec=[...issues].reverse().slice(0,5);
+  const rTb=document.getElementById('dash-recent');
+  rTb.innerHTML=!rec.length
+    ?'<tr><td colspan="4" class="loading-row">No issues yet</td></tr>'
+    :rec.map(i=>{
+        const od=isOD(i);
+        const badge=i.returned?`<span class="badge badge-gray">Returned</span>`:od?`<span class="badge badge-danger">Overdue</span>`:`<span class="badge badge-success">Active</span>`;
+        return`<tr>
+          <td><div style="font-weight:600;font-size:.82rem">${esc(mName(i))}</div><div style="font-size:.7rem;color:var(--muted2)">${esc(mEmail(i))}</div></td>
+          <td>${esc(bTitle(i))}</td>
+          <td>${fmtDate(i.dueDate)}</td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+
+  // overdue
+  const ovTb=document.getElementById('dash-overdue');
+  ovTb.innerHTML=!ov.length
+    ?'<tr><td colspan="4" class="loading-row">🎉 None overdue!</td></tr>'
+    :ov.slice(0,5).map(i=>{
+        const d=daysLate(i.dueDate);
+        return`<tr class="overdue-row">
+          <td><div style="font-weight:600;font-size:.82rem">${esc(mName(i))}</div><div style="font-size:.7rem;color:var(--muted2)">${esc(mEmail(i))}</div></td>
+          <td>${esc(bTitle(i))}</td>
+          <td><strong style="color:var(--danger)">${d}d</strong></td>
+          <td><strong>₹${d*10}</strong></td>
+        </tr>`;
+      }).join('');
+
+  // pending requests
+  const pend=requests.filter(r=>r.status==='PENDING');
+  const rqTb=document.getElementById('dash-requests');
+  rqTb.innerHTML=!pend.length
+    ?'<tr><td colspan="5" class="loading-row">No pending requests</td></tr>'
+    :pend.slice(0,5).map(r=>{
+        const by=r.requestedBy?(r.requestedBy.firstName||'')+(r.requestedBy.lastName?' '+r.requestedBy.lastName:''):'Unknown';
+        return`<tr class="pending-row">
+          <td><strong>${esc(r.bookTitle||'—')}</strong></td>
+          <td>${esc(r.author||'—')}</td>
+          <td>${esc(by)}</td>
+          <td>${fmtDate(r.requestDate)}</td>
+          <td><div style="display:flex;gap:5px">
+            <button class="btn btn-success btn-xs" onclick="updateReqStatus(${r.id},'APPROVED')">✓ Approve</button>
+            <button class="btn btn-danger btn-xs" onclick="updateReqStatus(${r.id},'REJECTED')">✕</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+}
+
+/* ═══ PAYMENTS ═══ */
+function renderPayments(){
+  const q=(document.getElementById('pay-q').value||'').toLowerCase();
+  const mf=document.getElementById('pay-method-f').value;
+
+  const f=payments.filter(p=>{
+    const mq=!q||String(p.userId||'').includes(q)||(p.method||'').toLowerCase().includes(q);
+    return mq&&(!mf||p.method===mf);
+  });
+
+  // Stats
+  const total=payments.filter(p=>p.status==='SUCCESS').reduce((s,p)=>s+(p.amount||0),0);
+  const count=payments.length;
+  document.getElementById('pay-total').textContent='₹'+total.toFixed(0);
+  document.getElementById('pay-count').textContent=count;
+  document.getElementById('pay-avg').textContent=count>0?'₹'+(total/count).toFixed(0):'₹0';
+
+  const tb=document.getElementById('pay-tbody');
+  if(!f.length){
+    tb.innerHTML=`<tr><td colspan="6" class="loading-row">${payments.length?'No results match filter':'No payments recorded yet'}</td></tr>`;
+    return;
+  }
+
+  // Sort newest first
+  const sorted=[...f].sort((a,b)=>new Date(b.paymentDate||0)-new Date(a.paymentDate||0));
+  tb.innerHTML=sorted.map(p=>{
+    const statusBadgeHtml=p.status==='SUCCESS'
+      ?`<span class="badge badge-success"><span class="dot"></span>Success</span>`
+      :`<span class="badge badge-danger"><span class="dot"></span>${esc(p.status||'—')}</span>`;
+    const methodBadgeHtml=p.method==='CARD'
+      ?`<span class="badge badge-blue">💳 Card</span>`
+      :`<span class="badge badge-gray">${esc(p.method||'—')}</span>`;
+    const dt=p.paymentDate?new Date(p.paymentDate):null;
+    const dtStr=dt?dt.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    return`<tr>
+      <td><code style="background:#eff6ff;padding:2px 7px;border-radius:5px;font-size:.72rem;font-weight:700;color:var(--primary)">#${p.id}</code></td>
+      <td style="font-weight:600">${p.userId||'—'}</td>
+      <td><strong style="color:var(--success)">₹${Number(p.amount||0).toFixed(2)}</strong></td>
+      <td>${methodBadgeHtml}</td>
+      <td>${statusBadgeHtml}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${dtStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══ BADGES ═══ */
+function updateBadges(){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const ovN=issues.filter(i=>!i.returned&&new Date(i.dueDate)<today).length;
+  const rqN=requests.filter(r=>r.status==='PENDING').length;
+  const ob=document.getElementById('ov-badge'), rb=document.getElementById('req-badge');
+  ob.textContent=ovN; ob.style.display=ovN?'inline':'none';
+  rb.textContent=rqN; rb.style.display=rqN?'inline':'none';
+  updateAdminBadge();
+}
+
+/* ═══ INIT ═══ */
+async function init(){
+  initUser();
+  await loadAll();
+  await loadMembers();
+  // load pending users count for badge (silently)
+  try{ pendingUsers = await api('/admin/pending-users'); updateAdminBadge(); } catch{}
+  renderDashboard();
+  updateBadges();
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

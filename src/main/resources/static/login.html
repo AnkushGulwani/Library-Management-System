@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Library Management System</title>
+<link
+	href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+	rel="stylesheet">
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+:root {
+	--primary-color: #2563eb;
+	--primary-dark: #1e40af;
+	--primary-light: #3b82f6;
+	--accent-color: #f59e0b;
+	--text-dark: #0f172a;
+	--text-gray: #64748b;
+	--bg-light: #f8fafc;
+	--white: #ffffff;
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0/ 0.05);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0/ 0.1);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0/ 0.1);
+	--shadow-xl: 0 20px 25px -5px rgb(0 0 0/ 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;              
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;              
+    overflow: hidden;          
+}
+
+
+body::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-image:
+		url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="none"/><path d="M0 0L50 50L0 100M50 0L100 50L50 100M100 0v100" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>');
+	opacity: 0.3;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;  
+}
+
+
+
+@keyframes fadeInUp {from { opacity:0;
+	transform: translateY(30px);
+}
+
+to {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+}
+.form-box {
+    background: white;
+    border-radius: 18px;
+    box-shadow: var(--shadow-xl);
+    padding: 35px 35px;  
+}
+
+
+
+.logo {
+    text-align: center;
+    margin-bottom: 25px;  
+}
+
+
+.logo-icon {
+	width: 70px;
+	height: 70px;
+	background: linear-gradient(135deg, var(--primary-color),
+		var(--primary-light));
+	border-radius: 16px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 20px;
+	box-shadow: var(--shadow-lg);
+	animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+	0%, 100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+.logo-icon svg {
+	width: 40px;
+	height: 40px;
+	fill: white;
+}
+
+h2 {
+    font-size: 1.7rem;    
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 20px;   
+}
+
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;  
+}
+
+
+.input-group {
+	position: relative;
+}
+
+input[type="email"], input[type="password"] {
+	width: 100%;
+	padding: 14px 16px;
+	border: 2px solid #e2e8f0;
+	border-radius: 10px;
+	font-size: 0.95rem;
+	font-family: 'Inter', sans-serif;
+	transition: all 0.3s ease;
+	background-color: white;
+}
+
+input:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+input::placeholder {
+	color: #94a3b8;
+}
+
+.forgot-password {
+	text-align: right;
+	margin-top: -10px;
+	margin-bottom: 10px;
+}
+
+.forgot-password a {
+	color: var(--primary-color);
+	text-decoration: none;
+	font-size: 0.9rem;
+	font-weight: 500;
+	transition: color 0.3s ease;
+}
+
+.forgot-password a:hover {
+	color: var(--primary-dark);
+	text-decoration: underline;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 15px 32px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--primary-color),
+        var(--primary-light));
+    color: white;
+    box-shadow: var(--shadow-md);
+    margin: 15px 0;  
+}
+
+
+button[type="submit"]:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-lg);
+}
+
+button[type="submit"]:active {
+	transform: translateY(0);
+}
+
+.btn {
+    width: 100%;
+    padding: 14px 32px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    color: var(--text-gray);
+    margin: 15px 0; 
+}
+
+
+.btn:hover {
+	background: #f8fafc;
+	border-color: var(--primary-color);
+	color: var(--primary-color);
+}
+
+#loginResponse {
+	text-align: center;
+	padding: 12px;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	display: none;
+}
+
+#loginResponse.success {
+	display: block;
+	background-color: #d1fae5;
+	color: #065f46;
+	border: 1px solid #10b981;
+}
+
+#loginResponse.error {
+	display: block;
+	background-color: #fee2e2;
+	color: #991b1b;
+	border: 1px solid #ef4444;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.divider::before, .divider::after {
+	content: '';
+	flex: 1;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.divider span {
+	padding: 0 15px;
+}
+
+.register-link {
+	text-align: center;
+	margin-top: 15px;
+	font-size: 0.95rem;
+	color: var(--text-gray);
+}
+
+.register-link a {
+	color: var(--primary-color);
+	text-decoration: none;
+	font-weight: 600;
+	transition: color 0.3s ease;
+}
+
+.register-link a:hover {
+	color: var(--primary-dark);
+	text-decoration: underline;
+}
+
+.back-home {
+	text-align: center;
+	margin-top: 20px;
+}
+
+.back-home a {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: white;
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.9rem;
+	opacity: 0.9;
+	transition: opacity 0.3s ease;
+}
+
+.back-home a:hover {
+	opacity: 1;
+}
+
+/* Responsive Design */
+@media ( max-width : 480px) {
+	.form-box {
+		padding: 40px 30px;
+	}
+	h2 {
+		font-size: 1.75rem;
+	}
+	.logo-icon {
+		width: 60px;
+		height: 60px;
+	}
+	.logo-icon svg {
+		width: 35px;
+		height: 35px;
+	}
+}
+</style>
+</head>
+<body>
+	<div class="container">
+		<div class="form-box active" id="login-form">
+			<div class="logo">
+				<div class="logo-icon">
+					<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path
+							d="M4 6h2v12H4V6zm4 0h2v12H8V6zm4 0h2v12h-2V6zm4 0h2v12h-2V6zm4 0h2v12h-2V6z" />
+          </svg>
+				</div>
+				<h2>Welcome Back</h2>
+				<p class="subtitle">Login to your library account</p>
+			</div>
+
+			<form id="loginForm">
+				<div class="input-group">
+					<input type="email" id="email" name="email"
+						placeholder="Email address" required>
+				</div>
+
+				<div class="input-group">
+					<input type="password" id="password" name="password"
+						placeholder="Password" required>
+				</div>
+
+				<div class="forgot-password">
+					<a href="home.html">Forgot Password?</a>
+				</div>
+
+				<button type="submit">Login</button>
+			</form>
+
+			<p id="loginResponse"></p>
+
+			<div class="divider">
+				<span>OR</span>
+			</div>
+
+			<a href="index.html"><button class="btn">Back to Home
+					Page</button></a>
+
+			<p class="register-link">
+				Don't have an account? <a href="reg.html">Register</a>
+			</p>
+		</div>
+	</div>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const email = e.target.email.value;
+  const password = e.target.password.value;
+  const responseElement = document.getElementById("loginResponse");
+
+  try {
+    const res = await fetch("http://localhost:8080/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
+    });
+
+    const result = await res.text();
+
+    if (!res.ok) {
+      responseElement.innerText = result;
+      responseElement.className = "error";
+      return;
+    }
+
+    const user = JSON.parse(result);
+
+    localStorage.setItem("userId", user.id);
+    localStorage.setItem("userEmail", user.email);
+    localStorage.setItem("userName", user.firstName + " " + user.lastName);
+    localStorage.setItem("userRole", user.role);
+
+    responseElement.innerText = "Login successful. Redirecting...";
+    responseElement.className = "success";
+
+    setTimeout(() => {
+
+      if (user.firstLogin) {
+        window.location.href = "home.html";
+        return;
+      }
+
+      if (user.role === "ADMIN") {
+        window.location.href = "admin.html";
+      } 
+      else if (user.role === "LIBRARIAN") {
+        window.location.href = "librarian-dashboard.html";
+      } 
+      else {
+        window.location.href = "dashboard.html";
+      }
+
+    }, 1200);
+
+  } catch (err) {
+    responseElement.innerText = "Server error. Please try again.";
+    responseElement.className = "error";
+  }
+});
+</script>
+
+</body>
+</html>

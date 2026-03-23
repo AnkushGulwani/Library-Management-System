@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraryOS — My Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & VARS ── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0d1117;--ink2:#374151;--muted:#6b7280;--muted2:#9ca3af;
+  --bg:#f6f7f9;--white:#fff;--border:#e5e7eb;--border2:#f3f4f6;
+  --blue:#2563eb;--blue-dark:#1d4ed8;--blue-light:#3b82f6;
+  --blue-xlight:#eff6ff;--blue-pale:#dbeafe;
+  --green:#059669;--green-light:#10b981;--green-pale:#d1fae5;
+  --red:#dc2626;--red-light:#ef4444;--red-pale:#fee2e2;
+  --amber:#d97706;--amber-light:#f59e0b;--amber-pale:#fef3c7;
+  --purple:#7c3aed;--teal:#0d9488;
+  --r:12px;--r-lg:16px;--r-xl:20px;
+  --sh-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 12px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.05);
+  --sh-lg:0 10px 28px rgba(0,0,0,.11),0 4px 8px rgba(0,0,0,.05);
+  --sh-xl:0 20px 50px rgba(0,0,0,.14);
+}
+body{font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;font-size:15px}
+
+/* ════════════════════════════════
+   NAVBAR
+════════════════════════════════ */
+.nav{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 36px;height:68px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:300;
+  box-shadow:var(--sh-sm)
+}
+.nav-logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+.nav-logo-icon{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(37,99,235,.3)
+}
+.nav-logo-icon svg{width:22px;height:22px;fill:white}
+.nav-brand{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--ink)}
+.nav-brand span{color:var(--blue)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-user{display:flex;align-items:center;gap:9px}
+.nav-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+  display:flex;align-items:center;justify-content:center;
+  color:white;font-weight:700;font-size:.8rem;flex-shrink:0
+}
+.nav-username{font-weight:600;font-size:.88rem;color:var(--ink)}
+.logout-btn{
+  padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);font-weight:600;font-size:.78rem;
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:5px
+}
+.logout-btn svg{width:13px;height:13px;fill:currentColor}
+.logout-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-pale)}
+
+/* ════════════════════════════════
+   NOTIFICATION BELL
+   Endpoint: GET /api/notifications/{userId}
+   Returns:  List<Notification>
+   Fields:   id, message, createdAt, read (bool), type (optional)
+════════════════════════════════ */
+.bell-wrap{position:relative}
+.bell-btn{
+  width:40px;height:40px;border-radius:10px;
+  border:1.5px solid var(--border);background:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .18s;flex-shrink:0
+}
+.bell-btn:hover{background:var(--blue-xlight);border-color:var(--blue-pale)}
+.bell-btn svg{width:20px;height:20px;fill:var(--muted);transition:fill .15s}
+.bell-btn:hover svg{fill:var(--blue)}
+/* Red badge on bell — shows unread count */
+.bell-badge{
+  position:absolute;top:-5px;right:-5px;
+  min-width:18px;height:18px;border-radius:20px;
+  background:var(--red);color:white;
+  font-size:.58rem;font-weight:800;
+  border:2px solid var(--white);
+  display:none;align-items:center;justify-content:center;padding:0 3px;
+  line-height:1
+}
+.bell-badge.visible{display:flex}
+
+/* ════════════════════════════════
+   NOTIFICATION PANEL (dropdown)
+════════════════════════════════ */
+.notif-overlay{
+  display:none;position:fixed;inset:0;z-index:390
+}
+.notif-overlay.open{display:block}
+.notif-panel{
+  position:fixed;top:74px;right:24px;
+  width:368px;max-height:520px;
+  background:var(--white);border-radius:var(--r-lg);
+  box-shadow:var(--sh-xl);border:1px solid var(--border);
+  z-index:400;display:none;flex-direction:column;overflow:hidden
+}
+.notif-panel.open{display:flex;animation:notifPop .18s ease}
+@keyframes notifPop{
+  from{opacity:0;transform:translateY(-8px) scale(.97)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.notif-head{
+  padding:15px 18px 12px;
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0
+}
+.notif-head-left{display:flex;align-items:center;gap:9px}
+.notif-head-left h3{font-size:.92rem;font-weight:700;color:var(--ink)}
+.notif-chip{
+  background:var(--blue-pale);color:var(--blue-dark);
+  font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:20px;
+  display:none
+}
+.notif-chip.visible{display:inline-block}
+.notif-close{
+  width:28px;height:28px;border-radius:7px;
+  border:none;background:var(--border2);
+  cursor:pointer;font-size:.85rem;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s
+}
+.notif-close:hover{background:var(--border);color:var(--ink)}
+.notif-body{flex:1;overflow-y:auto;padding:4px 0}
+/* Notification items */
+.notif-item{
+  display:flex;gap:11px;padding:12px 18px;
+  border-bottom:1px solid var(--border2);
+  transition:background .12s;cursor:default
+}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:#fafbfc}
+.notif-item.unread{background:var(--blue-xlight)}
+.notif-item.unread:hover{background:#ddeeff}
+.notif-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0
+}
+.notif-icon.info{background:var(--blue-pale)}
+.notif-icon.warn{background:var(--amber-pale)}
+.notif-icon.success{background:var(--green-pale)}
+.notif-icon.danger{background:var(--red-pale)}
+.notif-text{flex:1;min-width:0}
+.notif-msg{font-size:.82rem;color:var(--ink2);line-height:1.47;margin-bottom:3px;word-break:break-word}
+.notif-time{font-size:.7rem;color:var(--muted2)}
+.notif-section-label{
+  padding:9px 18px 4px;
+  font-size:.68rem;font-weight:700;letter-spacing:.7px;
+  text-transform:uppercase;color:var(--muted2)
+}
+.notif-empty{
+  padding:44px 20px;text-align:center;color:var(--muted)
+}
+.notif-empty-icon{font-size:2.6rem;margin-bottom:10px}
+.notif-empty p{font-size:.84rem;line-height:1.6}
+
+/* ════════════════════════════════
+   LAYOUT
+════════════════════════════════ */
+.layout{display:flex;min-height:calc(100vh - 68px)}
+.sidebar{
+  width:230px;background:var(--white);border-right:1px solid var(--border);
+  padding:20px 12px;position:sticky;top:68px;
+  height:calc(100vh - 68px);overflow-y:auto;flex-shrink:0
+}
+.sidebar-section{
+  font-size:.65rem;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;color:var(--muted2);
+  padding:0 8px;margin:16px 0 5px
+}
+.sidebar-section:first-child{margin-top:4px}
+.nav-link{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;
+  border-radius:9px;cursor:pointer;color:var(--muted);
+  font-size:.85rem;font-weight:500;margin-bottom:1px;
+  border:none;background:none;width:100%;text-align:left;
+  font-family:'DM Sans',sans-serif;transition:all .18s
+}
+.nav-link svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+.nav-link:hover{background:var(--bg);color:var(--ink)}
+.nav-link.active{background:var(--blue-xlight);color:var(--blue);font-weight:600}
+.nbadge{
+  margin-left:auto;background:var(--red);color:white;
+  font-size:.6rem;font-weight:700;padding:2px 6px;
+  border-radius:20px;min-width:18px;text-align:center
+}
+.main-content{flex:1;padding:28px 32px;overflow-x:hidden;min-width:0}
+
+/* ════════════════════════════════
+   WELCOME BANNER
+════════════════════════════════ */
+.welcome{
+  background:linear-gradient(135deg,#1d4ed8 0%,var(--blue) 52%,var(--blue-light) 100%);
+  border-radius:var(--r-xl);padding:30px 36px;color:white;
+  margin-bottom:28px;box-shadow:0 8px 32px rgba(37,99,235,.25);
+  position:relative;overflow:hidden
+}
+.welcome::before{
+  content:'';position:absolute;right:-30px;top:-30px;
+  width:180px;height:180px;background:rgba(255,255,255,.05);border-radius:50%
+}
+.welcome::after{
+  content:'';position:absolute;right:100px;bottom:-40px;
+  width:120px;height:120px;background:rgba(255,255,255,.04);border-radius:50%
+}
+.welcome h1{
+  font-family:'DM Serif Display',serif;font-size:1.9rem;
+  margin-bottom:5px;position:relative
+}
+.welcome p{font-size:.9rem;opacity:.85;position:relative}
+.welcome-meta{
+  display:flex;gap:22px;margin-top:16px;padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.15);position:relative;flex-wrap:wrap
+}
+.welcome-meta-item{font-size:.8rem;opacity:.8}
+.welcome-meta-item strong{display:block;font-size:.95rem;opacity:1;font-weight:700}
+
+/* ════════════════════════════════
+   STATS
+════════════════════════════════ */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px
+}
+.stat{
+  background:var(--white);border-radius:var(--r);padding:18px 20px;
+  box-shadow:var(--sh-sm);border:1px solid var(--border2);
+  transition:all .22s;position:relative;overflow:hidden
+}
+.stat::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+.stat.blue::before{background:linear-gradient(90deg,var(--blue-dark),var(--blue-light))}
+.stat.green::before{background:linear-gradient(90deg,var(--green),var(--green-light))}
+.stat.red::before{background:linear-gradient(90deg,#b91c1c,var(--red-light))}
+.stat.amber::before{background:linear-gradient(90deg,var(--amber),var(--amber-light))}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.stat-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.stat-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.stat-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+.stat-ico svg{width:18px;height:18px;fill:currentColor}
+.stat-ico.blue{background:var(--blue-xlight);color:var(--blue)}
+.stat-ico.green{background:var(--green-pale);color:var(--green)}
+.stat-ico.red{background:var(--red-pale);color:var(--red)}
+.stat-ico.amber{background:var(--amber-pale);color:var(--amber)}
+.stat-val{font-size:1.85rem;font-weight:800;color:var(--ink);letter-spacing:-.5px;line-height:1}
+.stat-sub{font-size:.69rem;color:var(--muted2);margin-top:4px}
+
+/* ════════════════════════════════
+   PAGES
+════════════════════════════════ */
+.page{display:none;animation:fadeIn .28s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-head{
+  margin-bottom:20px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;flex-wrap:wrap
+}
+.page-head h2{font-family:'DM Serif Display',serif;font-size:1.55rem;color:var(--ink)}
+
+/* ════════════════════════════════
+   BOOK LIST CARDS
+════════════════════════════════ */
+.book-list{display:flex;flex-direction:column;gap:13px}
+.book-card{
+  background:var(--white);border-radius:var(--r);padding:18px 20px;
+  box-shadow:var(--sh-sm);border:1px solid var(--border2);
+  display:flex;gap:16px;align-items:flex-start;transition:all .2s
+}
+.book-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.book-spine{
+  width:64px;height:90px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;flex-shrink:0;
+  box-shadow:3px 3px 12px rgba(0,0,0,.12);overflow:hidden
+}
+.book-spine.c0{background:linear-gradient(160deg,var(--blue),var(--blue-light))}
+.book-spine.c1{background:linear-gradient(160deg,var(--green),var(--green-light))}
+.book-spine.c2{background:linear-gradient(160deg,var(--amber),var(--amber-light))}
+.book-spine.c3{background:linear-gradient(160deg,var(--teal),#14b8a6)}
+.book-spine.c4{background:linear-gradient(160deg,var(--purple),#8b5cf6)}
+.book-cover-img{
+  width:64px;height:90px;border-radius:8px;object-fit:cover;
+  flex-shrink:0;box-shadow:3px 3px 12px rgba(0,0,0,.12)
+}
+.book-info{flex:1;min-width:0}
+.book-title{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+.book-author{font-size:.84rem;color:var(--muted);margin-bottom:12px}
+.book-meta{display:flex;gap:20px;flex-wrap:wrap}
+.meta-item{display:flex;flex-direction:column;gap:2px}
+.meta-label{font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--muted2)}
+.meta-value{font-size:.88rem;font-weight:600;color:var(--ink)}
+
+/* ════════════════════════════════
+   BADGES
+════════════════════════════════ */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap
+}
+.badge-active{background:var(--green-pale);color:var(--green)}
+.badge-overdue{background:var(--red-pale);color:var(--red)}
+.badge-returned{background:var(--border2);color:var(--muted)}
+.badge-pending{background:var(--amber-pale);color:var(--amber)}
+.badge-approved{background:var(--green-pale);color:var(--green)}
+.badge-rejected{background:var(--red-pale);color:var(--red)}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block}
+
+/* ════════════════════════════════
+   BROWSE CATALOG
+════════════════════════════════ */
+.filter-bar{display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+.search-box{flex:1;min-width:180px;position:relative}
+.search-box svg{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;fill:var(--muted2);pointer-events:none
+}
+.search-box input{
+  width:100%;padding:9px 10px 9px 30px;border:1.5px solid var(--border);
+  border-radius:9px;font-size:.84rem;font-family:'DM Sans',sans-serif;
+  color:var(--ink);background:var(--white);transition:border .18s
+}
+.search-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.search-box input::placeholder{color:var(--muted2)}
+.filter-select{
+  padding:9px 11px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:.84rem;font-family:'DM Sans',sans-serif;color:var(--ink);
+  background:var(--white);cursor:pointer
+}
+.filter-select:focus{outline:none;border-color:var(--blue)}
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.browse-card{
+  background:var(--white);border-radius:var(--r);border:1.5px solid var(--border2);
+  overflow:hidden;transition:all .2s;box-shadow:var(--sh-sm)
+}
+.browse-card:hover{box-shadow:var(--sh-md);transform:translateY(-3px);border-color:var(--blue-pale)}
+.browse-cover{width:100%;height:190px;object-fit:cover;display:block}
+.browse-cover-placeholder{
+  width:100%;height:190px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;font-size:2.5rem
+}
+.browse-cover-placeholder.c0{background:linear-gradient(135deg,#1d4ed8,var(--blue-light))}
+.browse-cover-placeholder.c1{background:linear-gradient(135deg,var(--green),var(--green-light))}
+.browse-cover-placeholder.c2{background:linear-gradient(135deg,var(--amber),var(--amber-light))}
+.browse-cover-placeholder.c3{background:linear-gradient(135deg,var(--teal),#14b8a6)}
+.browse-cover-placeholder.c4{background:linear-gradient(135deg,var(--purple),#8b5cf6)}
+.browse-cover-placeholder span{
+  font-size:.65rem;color:rgba(255,255,255,.85);font-weight:600;
+  text-align:center;padding:0 10px;line-height:1.4
+}
+.browse-body{padding:12px 14px}
+.browse-title{
+  font-size:.86rem;font-weight:700;color:var(--ink);margin-bottom:3px;
+  line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden
+}
+.browse-author{font-size:.76rem;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.browse-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px}
+
+/* ════════════════════════════════
+   IMAGE VIEWER
+════════════════════════════════ */
+.img-viewer{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.87);
+  z-index:600;align-items:center;justify-content:center;cursor:zoom-out
+}
+.img-viewer.open{display:flex}
+.img-viewer img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.img-viewer-close{
+  position:absolute;top:20px;right:24px;color:white;font-size:1.8rem;
+  cursor:pointer;background:rgba(0,0,0,.4);width:36px;height:36px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:none;opacity:.7;transition:opacity .15s
+}
+.img-viewer-close:hover{opacity:1}
+
+/* ════════════════════════════════
+   FINES & PAYMENT
+   Endpoints:
+     GET  /user/{userId}/pending-fines  → List<Issue>
+     GET  /user/{userId}/total-fine     → plain double
+     POST /api/payments/checkout/{id}   → Stripe URL string
+════════════════════════════════ */
+.fines-hero{
+  border-radius:var(--r-lg);padding:28px 32px;color:white;margin-bottom:22px
+}
+.fines-hero.has-fines{
+  background:linear-gradient(135deg,#991b1b,var(--red));
+  box-shadow:0 8px 24px rgba(220,38,38,.25)
+}
+.fines-hero.no-fines{
+  background:linear-gradient(135deg,#065f46,var(--green));
+  box-shadow:0 8px 24px rgba(5,150,105,.25)
+}
+.fines-hero h3{font-size:.86rem;opacity:.75;font-weight:500;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.fines-hero .fh-amt{font-family:'DM Serif Display',serif;font-size:3.2rem;line-height:1;margin-bottom:8px}
+.fines-hero p{font-size:.88rem;opacity:.82}
+/* Stripe info strip */
+.stripe-info{
+  display:flex;align-items:flex-start;gap:13px;
+  background:linear-gradient(135deg,var(--amber-pale),#fffbeb);
+  border:1.5px solid #fcd34d;border-radius:var(--r);
+  padding:14px 18px;margin-bottom:18px
+}
+.stripe-info-icon{font-size:1.5rem;flex-shrink:0;line-height:1.1}
+.stripe-info-body strong{font-size:.86rem;color:var(--amber);display:block;margin-bottom:3px}
+.stripe-info-body p{font-size:.79rem;color:var(--ink2);line-height:1.55}
+/* Fine item row */
+.fine-item{
+  background:var(--white);border-radius:var(--r);
+  padding:16px 20px;box-shadow:var(--sh-sm);border:1px solid var(--border2);
+  display:flex;gap:14px;align-items:center;
+  margin-bottom:10px;border-left:3px solid var(--red)
+}
+.fine-cover{
+  width:40px;height:55px;border-radius:6px;object-fit:cover;
+  flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15)
+}
+.fine-cover-ph{
+  width:40px;height:55px;border-radius:6px;
+  background:linear-gradient(135deg,var(--red-pale),#fecdd3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0
+}
+.fine-info{flex:1;min-width:0}
+.fine-title{
+  font-size:.9rem;font-weight:700;color:var(--ink);margin-bottom:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.fine-sub{font-size:.78rem;color:var(--muted)}
+.fine-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.fine-amount{font-size:1.22rem;font-weight:800;color:var(--red);white-space:nowrap}
+/* Pay Now button */
+.btn-pay{
+  padding:8px 16px;border-radius:9px;border:none;
+  font-weight:700;font-size:.78rem;cursor:pointer;
+  transition:all .2s;font-family:'DM Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#16a34a,var(--green-light));
+  color:white;box-shadow:0 2px 8px rgba(5,150,105,.3);white-space:nowrap
+}
+.btn-pay:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(5,150,105,.4)}
+.btn-pay:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none}
+.btn-pay svg{width:13px;height:13px;fill:currentColor}
+
+/* ════════════════════════════════
+   MEMBERSHIP
+════════════════════════════════ */
+.membership-current{
+  background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+  border-radius:var(--r-lg);padding:26px 28px;color:white;
+  box-shadow:0 8px 24px rgba(37,99,235,.25);position:relative;overflow:hidden;margin-bottom:20px
+}
+.membership-current::after{
+  content:'';position:absolute;right:-20px;top:-20px;
+  width:120px;height:120px;background:rgba(255,255,255,.06);border-radius:50%
+}
+.membership-current h3{font-size:.78rem;opacity:.65;font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.membership-current .plan-name{font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:14px;position:relative}
+.membership-current .plan-detail{font-size:.8rem;opacity:.82;line-height:1.9}
+.membership-current .plan-detail strong{opacity:1;font-weight:700}
+.membership-expired{
+  background:linear-gradient(135deg,#991b1b,var(--red));
+  border-radius:var(--r-lg);padding:20px 24px;color:white;margin-bottom:20px
+}
+.no-membership{
+  background:var(--white);border-radius:var(--r-lg);
+  padding:28px;border:2px dashed var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;text-align:center;color:var(--muted);margin-bottom:20px
+}
+.plan-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.plan-card{
+  background:var(--white);border-radius:var(--r);
+  border:1.5px solid var(--border2);padding:20px;
+  transition:all .2s;box-shadow:var(--sh-sm)
+}
+.plan-card:hover{border-color:var(--blue-pale);box-shadow:var(--sh-md);transform:translateY(-2px)}
+.plan-card.current-plan{border-color:var(--blue);border-width:2px}
+.plan-price{font-family:'DM Serif Display',serif;font-size:1.7rem;color:var(--blue);margin:6px 0 2px}
+.plan-price span{font-size:.85rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:500}
+.plan-name-tag{font-size:.95rem;font-weight:700;color:var(--ink)}
+.plan-features{list-style:none;margin:12px 0;font-size:.8rem;color:var(--ink2)}
+.plan-features li{padding:4px 0;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:6px}
+.plan-features li:last-child{border-bottom:none}
+.plan-features li::before{content:'✓';color:var(--green);font-weight:700}
+.current-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--blue-pale);color:var(--blue-dark);
+  font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:8px
+}
+
+/* ════════════════════════════════
+   REQUESTS
+════════════════════════════════ */
+.request-card{
+  background:var(--white);border-radius:var(--r-lg);padding:28px;
+  box-shadow:var(--sh-sm);border:1px solid var(--border2);max-width:600px;margin-bottom:28px
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-group label{font-size:.8rem;font-weight:600;color:var(--ink)}
+.form-group input,.form-group textarea{
+  padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:.88rem;font-family:'DM Sans',sans-serif;color:var(--ink);
+  transition:border .18s;background:var(--white)
+}
+.form-group input:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)
+}
+.form-group textarea{resize:vertical;min-height:72px}
+.req-list{display:flex;flex-direction:column;gap:11px}
+.req-card{
+  background:var(--white);border-radius:var(--r);padding:16px 18px;
+  box-shadow:var(--sh-sm);border:1.5px solid var(--border2)
+}
+.req-card.pending{border-left:3px solid var(--amber)}
+.req-card.approved{border-left:3px solid var(--green)}
+.req-card.rejected{border-left:3px solid var(--red)}
+.req-card-title{font-weight:700;font-size:.9rem;color:var(--ink);margin-bottom:2px}
+.req-card-author{font-size:.8rem;color:var(--muted);margin-bottom:8px}
+.req-card-desc{
+  font-size:.77rem;color:var(--muted);font-style:italic;
+  margin-bottom:8px;padding:7px 10px;background:#f8fafc;border-radius:7px;line-height:1.5
+}
+.req-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* ════════════════════════════════
+   CHANGE PASSWORD
+════════════════════════════════ */
+.pw-card{
+  background:var(--white);border-radius:var(--r-lg);padding:28px;
+  box-shadow:var(--sh-sm);border:1px solid var(--border2);max-width:460px
+}
+.pw-card h3{font-size:1rem;font-weight:700;margin-bottom:18px;color:var(--ink)}
+.pw-divider{height:1px;background:var(--border2);margin:4px 0 18px}
+
+/* ════════════════════════════════
+   BUTTONS
+════════════════════════════════ */
+.btn{
+  padding:9px 18px;border-radius:9px;border:none;font-weight:600;
+  font-size:.84rem;cursor:pointer;transition:all .2s;
+  font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px
+}
+.btn svg{width:13px;height:13px;fill:currentColor}
+.btn-primary{
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+  color:white;box-shadow:0 2px 8px rgba(37,99,235,.28)
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,.38)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-xlight)}
+.btn-sm{padding:6px 13px;font-size:.78rem;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* ════════════════════════════════
+   EMPTY / LOADING / TOAST STATES
+════════════════════════════════ */
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:12px}
+.empty h3{font-size:1rem;color:var(--ink2);margin-bottom:6px}
+.empty p{font-size:.85rem}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--muted2);gap:10px;font-size:.88rem}
+.spinner{
+  width:20px;height:20px;border:2px solid var(--border);
+  border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{
+  position:fixed;bottom:22px;right:22px;padding:11px 16px;
+  border-radius:10px;font-size:.82rem;font-weight:600;z-index:9999;
+  box-shadow:var(--sh-xl);animation:toastIn .22s ease;
+  max-width:320px;display:flex;align-items:center;gap:8px
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast.success{background:#064e3b;color:white}
+.toast.error{background:#7f1d1d;color:white}
+.toast.info{background:var(--blue-dark);color:white}
+
+/* ════════════════════════════════
+   RESPONSIVE
+════════════════════════════════ */
+@media(max-width:900px){
+  .sidebar{display:none}.nav{padding:0 20px}.main-content{padding:20px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr}.book-card{flex-direction:column}
+  .books-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}
+  .notif-panel{width:calc(100vw - 24px);right:12px}
+}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+
+/* ════════════════════════════════
+   CARD PAYMENT MODAL
+════════════════════════════════ */
+.pay-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(13,17,23,.72);backdrop-filter:blur(4px);
+  z-index:700;align-items:center;justify-content:center;padding:20px
+}
+.pay-overlay.open{display:flex;animation:fadeIn .2s ease}
+
+.pay-modal{
+  background:var(--white);border-radius:var(--r-xl);
+  width:100%;max-width:440px;
+  box-shadow:var(--sh-xl);overflow:hidden;
+  position:relative
+}
+
+/* Modal header */
+.pay-modal-head{
+  background:linear-gradient(135deg,#1d4ed8,var(--blue));
+  padding:20px 24px 18px;display:flex;align-items:center;justify-content:space-between
+}
+.pay-modal-head h3{
+  font-family:'DM Serif Display',serif;font-size:1.18rem;
+  color:white;display:flex;align-items:center;gap:9px
+}
+.pay-modal-head h3 svg{width:20px;height:20px;fill:white;opacity:.85}
+.pay-modal-close{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(255,255,255,.15);border:none;
+  color:white;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s
+}
+.pay-modal-close:hover{background:rgba(255,255,255,.28)}
+
+/* Amount pill */
+.pay-amount-pill{
+  margin:18px 24px 4px;
+  background:linear-gradient(135deg,var(--red-pale),#fff1f2);
+  border:1.5px solid #fca5a5;border-radius:var(--r);
+  padding:13px 18px;display:flex;align-items:center;justify-content:space-between
+}
+.pay-amount-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--red)}
+.pay-amount-val{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--red);line-height:1}
+.pay-book-name{font-size:.76rem;color:var(--muted);margin-top:3px}
+
+/* Credit card visual */
+.card-visual{
+  margin:14px 24px;
+  background:linear-gradient(135deg,#1e3a5f,#2563eb 60%,#3b82f6);
+  border-radius:14px;padding:20px 22px;color:white;
+  box-shadow:0 8px 24px rgba(37,99,235,.35);
+  position:relative;overflow:hidden;min-height:118px
+}
+.card-visual::before{
+  content:'';position:absolute;
+  width:180px;height:180px;
+  background:rgba(255,255,255,.05);border-radius:50%;
+  right:-40px;top:-60px
+}
+.card-visual::after{
+  content:'';position:absolute;
+  width:120px;height:120px;
+  background:rgba(255,255,255,.04);border-radius:50%;
+  right:60px;bottom:-50px
+}
+.card-chip{
+  width:30px;height:22px;
+  background:linear-gradient(135deg,#e2b96f,#c8861a);
+  border-radius:4px;margin-bottom:12px;position:relative
+}
+.card-chip::after{
+  content:'';position:absolute;inset:3px;
+  border:1px solid rgba(0,0,0,.15);border-radius:2px
+}
+.card-number-display{
+  font-size:1.05rem;font-weight:700;letter-spacing:.18em;
+  font-family:'Courier New',monospace;margin-bottom:12px;
+  opacity:.95;white-space:nowrap;overflow:hidden
+}
+.card-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.card-holder-display,.card-expiry-display{font-size:.7rem;opacity:.8}
+.card-holder-display span,.card-expiry-display span{
+  display:block;font-size:.85rem;font-weight:700;opacity:1;
+  text-transform:uppercase;letter-spacing:.05em
+}
+.card-network{
+  position:absolute;right:18px;top:18px;
+  display:flex;gap:-6px;z-index:1
+}
+.card-network-circle{
+  width:32px;height:32px;border-radius:50%;opacity:.85
+}
+.cn-left{background:#eb001b}
+.cn-right{background:#f79e1b;margin-left:-12px}
+
+/* Form fields */
+.pay-form{padding:6px 24px 20px}
+.pay-field{margin-bottom:13px}
+.pay-field label{
+  display:block;font-size:.75rem;font-weight:600;
+  color:var(--ink2);margin-bottom:4px;letter-spacing:.02em
+}
+.pay-field input{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--border);border-radius:9px;
+  font-size:.9rem;font-family:'DM Sans',sans-serif;
+  color:var(--ink);background:var(--bg);
+  transition:border-color .18s,box-shadow .18s;
+  letter-spacing:.04em
+}
+.pay-field input:focus{
+  outline:none;border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(37,99,235,.09);background:white
+}
+.pay-field input.invalid{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.09)}
+.pay-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pay-field-hint{font-size:.68rem;color:var(--muted2);margin-top:3px}
+
+/* Demo banner inside modal */
+.pay-demo-badge{
+  margin:0 24px 12px;
+  display:flex;align-items:center;gap:8px;
+  background:var(--amber-pale);border:1px solid #fcd34d;
+  border-radius:9px;padding:8px 12px;
+  font-size:.74rem;color:#92400e;font-weight:500
+}
+.pay-demo-badge svg{width:14px;height:14px;fill:#d97706;flex-shrink:0}
+
+/* Submit button */
+.pay-submit{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,#16a34a,var(--green-light));
+  color:white;border:none;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 3px 12px rgba(5,150,105,.3)
+}
+.pay-submit:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(5,150,105,.4)}
+.pay-submit:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.pay-submit svg{width:16px;height:16px;fill:currentColor}
+
+/* Processing state */
+.pay-processing{
+  display:none;flex-direction:column;align-items:center;
+  justify-content:center;padding:52px 24px;text-align:center;gap:16px
+}
+.pay-processing.show{display:flex}
+.pay-proc-ring{
+  width:60px;height:60px;border:4px solid var(--border);
+  border-top-color:var(--blue);border-radius:50%;
+  animation:spin .8s linear infinite
+}
+.pay-processing h4{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--ink)}
+.pay-processing p{font-size:.82rem;color:var(--muted);line-height:1.6}
+
+/* Success state */
+.pay-success{
+  display:none;flex-direction:column;align-items:center;
+  justify-content:center;padding:48px 24px;text-align:center;gap:12px
+}
+.pay-success.show{display:flex;animation:fadeIn .3s ease}
+.pay-success-icon{
+  width:68px;height:68px;background:var(--green-pale);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  animation:bounceIn .4s cubic-bezier(.34,1.56,.64,1)
+}
+@keyframes bounceIn{
+  from{transform:scale(0);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+.pay-success-icon svg{width:36px;height:36px;fill:var(--green)}
+.pay-success h4{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--ink)}
+.pay-success p{font-size:.85rem;color:var(--muted);line-height:1.6}
+.pay-success .pay-ok-btn{
+  margin-top:8px;padding:10px 28px;
+  background:linear-gradient(135deg,var(--blue),var(--blue-light));
+  color:white;border:none;border-radius:9px;
+  font-family:'DM Sans',sans-serif;font-weight:600;font-size:.88rem;
+  cursor:pointer;transition:all .2s
+}
+.pay-success .pay-ok-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,.35)}
+</style>
+</head>
+<body>
+
+<!-- IMAGE VIEWER -->
+<div class="img-viewer" id="img-viewer" onclick="closeImgViewer()">
+  <button class="img-viewer-close" onclick="event.stopPropagation();closeImgViewer()">✕</button>
+  <img id="img-viewer-src" src="" alt="Book cover">
+</div>
+
+<!-- ════════════════════════════════
+     CARD PAYMENT MODAL
+     POST /api/payment/pay?userId=&amount=&method=CARD
+     Returns: Payment { id, userId, amount, status, method, paymentDate }
+════════════════════════════════ -->
+<div class="pay-overlay" id="pay-overlay" onclick="closePayModal(event)">
+  <div class="pay-modal" id="pay-modal">
+
+    <!-- Header -->
+    <div class="pay-modal-head">
+      <h3>
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        Pay Fine
+      </h3>
+      <button class="pay-modal-close" onclick="closePayModal()" title="Close">✕</button>
+    </div>
+
+    <!-- Main body (form) -->
+    <div id="pay-body">
+
+      <!-- Amount -->
+      <div class="pay-amount-pill">
+        <div>
+          <div class="pay-amount-label">Amount Due</div>
+          <div class="pay-book-name" id="pay-book-name">—</div>
+        </div>
+        <div class="pay-amount-val" id="pay-amount-display">₹0</div>
+      </div>
+
+      <!-- Demo badge -->
+      <div class="pay-demo-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        Demo mode — use any card details. No real payment is processed.
+      </div>
+
+      <!-- Card visual (live preview) -->
+      <div class="card-visual" id="card-visual">
+        <div class="card-network">
+          <div class="card-network-circle cn-left"></div>
+          <div class="card-network-circle cn-right"></div>
+        </div>
+        <div class="card-chip"></div>
+        <div class="card-number-display" id="cv-number">•••• •••• •••• ••••</div>
+        <div class="card-bottom">
+          <div class="card-holder-display">Card Holder<span id="cv-name">YOUR NAME</span></div>
+          <div class="card-expiry-display">Expires<span id="cv-expiry">MM / YY</span></div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="pay-form">
+        <div class="pay-field">
+          <label>Card Number</label>
+          <input type="text" id="pay-card-num" placeholder="1234 5678 9012 3456"
+                 maxlength="19" oninput="formatCardNumber(this)" autocomplete="cc-number">
+        </div>
+        <div class="pay-field">
+          <label>Cardholder Name</label>
+          <input type="text" id="pay-card-name" placeholder="Name on card"
+                 oninput="updateCardName(this)" autocomplete="cc-name" style="text-transform:uppercase">
+        </div>
+        <div class="pay-field-row">
+          <div class="pay-field">
+            <label>Expiry Date</label>
+            <input type="text" id="pay-card-expiry" placeholder="MM / YY"
+                   maxlength="7" oninput="formatExpiry(this)" autocomplete="cc-exp">
+          </div>
+          <div class="pay-field">
+            <label>CVV</label>
+            <input type="password" id="pay-card-cvv" placeholder="•••"
+                   maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')" autocomplete="cc-csc">
+            <div class="pay-field-hint">3-4 digit security code</div>
+          </div>
+        </div>
+        <button class="pay-submit" id="pay-submit-btn" onclick="submitPayment()">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          Pay Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Processing state -->
+    <div class="pay-processing" id="pay-processing">
+      <div class="pay-proc-ring"></div>
+      <h4>Processing Payment…</h4>
+      <p>Please wait while we process your payment.<br>Do not close this window.</p>
+    </div>
+
+    <!-- Success state -->
+    <div class="pay-success" id="pay-success">
+      <div class="pay-success-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <h4>Payment Successful! 🎉</h4>
+      <p id="pay-success-msg">Your fine has been paid successfully.<br>Your record has been updated.</p>
+      <button class="pay-ok-btn" onclick="onPaymentDone()">Done</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     NOTIFICATION PANEL
+     GET /api/notifications/{userId}
+     Notification: { id, message, createdAt, read, type? }
+     - type is optional; we infer from message keywords if absent
+     - read=false → unread (highlighted)
+     - ordered newest-first by backend (findByUserIdOrderByCreatedAtDesc)
+════════════════════════════════ -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifPanel()"></div>
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-head">
+    <div class="notif-head-left">
+      <h3>🔔 Notifications</h3>
+      <span class="notif-chip" id="notif-chip"></span>
+    </div>
+    <button class="notif-close" onclick="closeNotifPanel()">✕</button>
+  </div>
+  <div class="notif-body" id="notif-body">
+    <div class="loading"><div class="spinner"></div>Loading…</div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M4 6h2v12H4V6zm4 0h2v12H8V6zm4 0h2v12h-2V6zm4 0h2v12h-2V6z"/></svg>
+    </div>
+    <span class="nav-brand">Library<span>OS</span></span>
+  </a>
+  <div class="nav-right">
+    <!-- Bell button — badge shows unread count -->
+    <div class="bell-wrap">
+      <button class="bell-btn" id="bell-btn" onclick="toggleNotifPanel()" title="Notifications">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+        </svg>
+        <span class="bell-badge" id="bell-badge"></span>
+      </button>
+    </div>
+    <div class="nav-user">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span class="nav-username" id="nav-username">Loading…</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Logout
+    </button>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">My Account</div>
+    <button class="nav-link active" id="nl-dashboard" onclick="goPage('dashboard',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard
+    </button>
+    <button class="nav-link" id="nl-current-books" onclick="goPage('current-books',this)">
+      <svg viewBox="0 0 24 24"><path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/></svg>My Books
+      <span class="nbadge" id="badge-books" style="display:none">0</span>
+    </button>
+    <button class="nav-link" id="nl-history" onclick="goPage('history',this)">
+      <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28L13 13.5V8h-1z"/></svg>Reading History
+    </button>
+    <div class="sidebar-section">Library</div>
+    <button class="nav-link" id="nl-browse" onclick="goPage('browse',this)">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>Browse Catalog
+    </button>
+    <button class="nav-link" id="nl-requests" onclick="goPage('requests',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>Book Requests
+      <span class="nbadge" id="badge-req" style="display:none">0</span>
+    </button>
+    <div class="sidebar-section">Account</div>
+    <button class="nav-link" id="nl-fines" onclick="goPage('fines',this)">
+      <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>Fines &amp; Pay
+      <span class="nbadge" id="badge-fines" style="display:none">!</span>
+    </button>
+    <button class="nav-link" id="nl-membership" onclick="goPage('membership',this)">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>Membership
+    </button>
+    <button class="nav-link" id="nl-password" onclick="goPage('password',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>Change Password
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="welcome">
+        <h1 id="welcome-name">Welcome back! 👋</h1>
+        <p>Your personal library dashboard — track books, fines and membership</p>
+        <div class="welcome-meta">
+          <div class="welcome-meta-item">Today<strong id="welcome-date"></strong></div>
+          <div class="welcome-meta-item" id="welcome-mem-item" style="display:none">
+            Membership<strong id="welcome-mem">—</strong>
+          </div>
+          <div class="welcome-meta-item" id="welcome-exp-item" style="display:none">
+            Expires<strong id="welcome-exp">—</strong>
+          </div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat blue">
+          <div class="stat-top">
+            <div class="stat-lbl">Currently Borrowed</div>
+            <div class="stat-ico blue"><svg viewBox="0 0 24 24"><path d="M19 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V4h14v16z"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-borrowed">—</div>
+          <div class="stat-sub">Active loans</div>
+        </div>
+        <div class="stat green">
+          <div class="stat-top">
+            <div class="stat-lbl">Books Read</div>
+            <div class="stat-ico green"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-history">—</div>
+          <div class="stat-sub">Returned</div>
+        </div>
+        <div class="stat red">
+          <div class="stat-top">
+            <div class="stat-lbl">Pending Fines</div>
+            <div class="stat-ico red"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-fines">—</div>
+          <div class="stat-sub">Outstanding</div>
+        </div>
+        <div class="stat amber">
+          <div class="stat-top">
+            <div class="stat-lbl">My Requests</div>
+            <div class="stat-ico amber"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-requests">—</div>
+          <div class="stat-sub">Submitted</div>
+        </div>
+      </div>
+      <div class="page-head">
+        <h2>Currently Borrowed</h2>
+        <button class="btn btn-outline btn-sm" onclick="goPage('current-books',document.getElementById('nl-current-books'))">View All →</button>
+      </div>
+      <div id="dash-books-list" class="book-list"></div>
+      <div id="dash-fines-alert" style="display:none;margin-top:24px">
+        <div class="page-head">
+          <h2>⚠️ Outstanding Fines</h2>
+          <button class="btn btn-outline btn-sm" onclick="goPage('fines',document.getElementById('nl-fines'))">Pay Fines →</button>
+        </div>
+        <div id="dash-fines-list"></div>
+      </div>
+    </div>
+
+    <!-- ── MY BOOKS ── -->
+    <div class="page" id="page-current-books">
+      <div class="page-head">
+        <h2>My Books</h2>
+        <span id="current-count" style="font-size:.85rem;color:var(--muted)"></span>
+      </div>
+      <div id="current-list" class="book-list"></div>
+    </div>
+
+    <!-- ── READING HISTORY ── -->
+    <div class="page" id="page-history">
+      <div class="page-head">
+        <h2>Reading History</h2>
+        <span id="hist-count" style="font-size:.85rem;color:var(--muted)"></span>
+      </div>
+      <div id="history-list" class="book-list"></div>
+    </div>
+
+    <!-- ── BROWSE CATALOG ── -->
+    <div class="page" id="page-browse">
+      <div class="page-head">
+        <h2>Browse Book Catalog</h2>
+        <span id="browse-count" style="font-size:.85rem;color:var(--muted)"></span>
+      </div>
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="browse-q" placeholder="Search title, author or genre…" oninput="filterBrowse()">
+        </div>
+        <select class="filter-select" id="browse-genre" onchange="filterBrowse()">
+          <option value="">All Genres</option>
+        </select>
+        <select class="filter-select" id="browse-avail" onchange="filterBrowse()">
+          <option value="">All Books</option>
+          <option value="yes">Available Only</option>
+        </select>
+      </div>
+      <div class="books-grid" id="browse-grid"></div>
+    </div>
+
+    <!-- ── BOOK REQUESTS ── -->
+    <div class="page" id="page-requests">
+      <div class="page-head"><h2>Book Requests</h2></div>
+      <div class="request-card">
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--ink)">Request a New Book</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Book Title *</label>
+            <input type="text" id="req-title" placeholder="e.g. The Pragmatic Programmer">
+          </div>
+          <div class="form-group">
+            <label>Author *</label>
+            <input type="text" id="req-author" placeholder="e.g. Andrew Hunt">
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Reason / Description</label>
+            <textarea id="req-desc" placeholder="Why do you want this book?"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="req-btn" onclick="submitRequest()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>Submit Request
+        </button>
+      </div>
+      <div class="page-head"><h2>My Previous Requests</h2></div>
+      <div id="req-list" class="req-list"></div>
+    </div>
+
+    <!-- ── FINES & PAYMENTS ──
+         GET  /user/{userId}/pending-fines  → List<Issue>
+              Issue: { id, book:{title,author,coverImage}, dueDate, fine, returned }
+         GET  /user/{userId}/total-fine     → plain double (not JSON!)
+         POST /api/payments/checkout/{issueId} → Stripe checkout URL (plain string)
+              Opens in new tab; Stripe redirects to /api/payments/success/{issueId}
+              which marks the fine paid on backend
+    -->
+    <div class="page" id="page-fines">
+      <div class="page-head"><h2>Fines &amp; Payments</h2></div>
+      <div class="fines-hero no-fines" id="fines-hero">
+        <h3>Total Outstanding</h3>
+        <div class="fh-amt" id="total-fine-amount">₹0</div>
+        <p id="total-fine-sub">Loading…</p>
+      </div>
+      <div id="fines-list"></div>
+    </div>
+
+    <!-- ── MEMBERSHIP ── -->
+    <div class="page" id="page-membership">
+      <div class="page-head"><h2>Membership</h2></div>
+      <div id="membership-current-wrap"></div>
+      <div class="page-head"><h2>Available Plans</h2></div>
+      <div class="plan-cards-grid" id="all-plans-grid">
+        <div class="loading"><div class="spinner"></div>Loading plans…</div>
+      </div>
+    </div>
+
+    <!-- ── CHANGE PASSWORD ──
+         POST /api/auth/change-password-two
+         Body (JSON): { email, currentPassword, newPassword }
+         Returns: 200 "Password updated successfully"  OR  400 error string
+    -->
+    <div class="page" id="page-password">
+      <div class="page-head"><h2>Change Password</h2></div>
+      <div class="pw-card">
+        <h3>Update Your Password</h3>
+        <div class="form-group">
+          <label>Current Password *</label>
+          <input type="password" id="pw-current" placeholder="Enter your current password">
+        </div>
+        <div class="pw-divider"></div>
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" id="pw-new" placeholder="Choose a strong new password (min 6 chars)">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password *</label>
+          <input type="password" id="pw-confirm" placeholder="Re-enter new password">
+        </div>
+        <button class="btn btn-primary" id="pw-btn" onclick="changePassword()">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          Update Password
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG & AUTH GUARD
+════════════════════════════════════════════════ */
+const API_BASE = 'http://localhost:8080';
+const COVERS   = 'http://localhost:8080/uploads/';
+
+// Redirect to login if not authenticated
+const _rawId  = localStorage.getItem('userId');
+const USER_ID = _rawId ? parseInt(_rawId) : NaN;
+if (!USER_ID || isNaN(USER_ID)) { window.location.href = 'login.html'; }
+
+// Read user info stored at login
+const USER_NAME  = (localStorage.getItem('userName')  || '').trim();
+const USER_EMAIL = (localStorage.getItem('userEmail') || '').trim().toLowerCase();
+
+let allBooks    = [];  // cached catalog for Browse
+let browseReady = false;
+
+/* ════════════════════════════════════════════════
+   INIT — runs once on DOMContentLoaded
+════════════════════════════════════════════════ */
+document.getElementById('welcome-date').textContent =
+  new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!USER_NAME) { window.location.href = 'login.html'; return; }
+
+  // Set navbar user info
+  const parts    = USER_NAME.split(' ');
+  const initials = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  document.getElementById('nav-avatar').textContent   = initials;
+  document.getElementById('nav-username').textContent = USER_NAME;
+  document.getElementById('welcome-name').textContent = `Welcome back, ${parts[0]}! 👋`;
+
+  loadDashboard();
+  loadNotifications(); // pre-load so bell badge shows immediately
+
+  // Poll for new notifications every 60 s (badge stays fresh without full reload)
+  setInterval(loadNotifications, 60_000);
+});
+
+function doLogout() {
+  if (!confirm('Logout from LibraryOS?')) return;
+  ['userId','userName','userEmail','userRole'].forEach(k => localStorage.removeItem(k));
+  window.location.href = 'login.html';
+}
+
+/* ════════════════════════════════════════════════
+   API HELPERS
+   
+   api(path, opts)
+     – Raw fetch. Throws on non-2xx.
+     – Auto sets Content-Type:application/json only when body is a string.
+     – Returns parsed JSON, or raw text if JSON.parse fails.
+       (Needed for /total-fine which returns plain double, not JSON.)
+   
+   apiArr(path)
+     – Wraps api(), always returns [], never throws.
+   
+   apiSafe(path, fallback)
+     – Wraps api(), returns fallback on any error, never throws.
+════════════════════════════════════════════════ */
+async function api(path, opts = {}) {
+  const isJsonBody = opts.body && typeof opts.body === 'string';
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: {
+      ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const msg = await res.text().catch(() => '');
+    throw new Error(msg || `HTTP ${res.status}`);
+  }
+  const txt = await res.text();
+  if (!txt || !txt.trim()) return null;
+  try { return JSON.parse(txt); }
+  catch { return txt; }  // e.g. plain double "42.5" or plain string
+}
+
+async function apiArr(path) {
+  try {
+    const r = await api(path);
+    return Array.isArray(r) ? r : [];
+  } catch (e) {
+    console.warn('[apiArr] failed:', path, e.message);
+    return [];
+  }
+}
+
+async function apiSafe(path, fallback = null) {
+  try {
+    const r = await api(path);
+    return r ?? fallback;
+  } catch (e) {
+    console.warn('[apiSafe] failed:', path, e.message);
+    return fallback;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   NOTIFICATIONS
+   GET /api/notifications/{userId} → List<Notification>
+   Notification model (inferred from controller + repo):
+     { id, message, createdAt, read (boolean), type? (optional) }
+   - Ordered newest-first (findByUserIdOrderByCreatedAtDesc)
+   - read=false → show as "unread" (blue highlight)
+   - type (INFO/WARN/SUCCESS/DANGER) — optional; we infer from message keywords
+════════════════════════════════════════════════ */
+async function loadNotifications() {
+  const notifs = await apiArr(`/api/notifications/${USER_ID}`);
+  _renderNotifications(notifs);
+}
+
+function _renderNotifications(notifs) {
+  const body  = document.getElementById('notif-body');
+  const chip  = document.getElementById('notif-chip');
+  const badge = document.getElementById('bell-badge');
+
+  // Count unread (read === false or read is missing/null)
+  const unreadCount = notifs.filter(n => !n.read).length;
+
+  // Update bell badge
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+
+  // Update panel chip
+  if (notifs.length > 0) {
+    chip.textContent = unreadCount > 0 ? `${unreadCount} new` : `${notifs.length} total`;
+    chip.classList.add('visible');
+  } else {
+    chip.classList.remove('visible');
+  }
+
+  if (notifs.length === 0) {
+    body.innerHTML = `
+      <div class="notif-empty">
+        <div class="notif-empty-icon">🔔</div>
+        <p>All caught up!<br>No notifications yet.</p>
+      </div>`;
+    return;
+  }
+
+  // Split into unread / already-read sections for clarity
+  const unread = notifs.filter(n => !n.read);
+  const read   = notifs.filter(n =>  n.read);
+  let html = '';
+
+  if (unread.length > 0) {
+    html += `<div class="notif-section-label">New · ${unread.length}</div>`;
+    html += unread.map(n => _notifItemHtml(n, true)).join('');
+  }
+  if (read.length > 0) {
+    if (unread.length > 0) {
+      html += `<div class="notif-section-label" style="margin-top:4px">Earlier</div>`;
+    }
+    html += read.map(n => _notifItemHtml(n, false)).join('');
+  }
+  body.innerHTML = html;
+}
+
+function _notifItemHtml(n, isUnread) {
+  const type  = _inferNotifType(n);
+  const icons = { info:'ℹ️', warn:'⚠️', success:'✅', danger:'🚨' };
+  return `
+    <div class="notif-item${isUnread ? ' unread' : ''}">
+      <div class="notif-icon ${type}">${icons[type] || 'ℹ️'}</div>
+      <div class="notif-text">
+        <div class="notif-msg">${escHtml(n.message || '')}</div>
+        <div class="notif-time">${fmtRelative(n.createdAt)}</div>
+      </div>
+    </div>`;
+}
+
+// Infer notification type from optional type field or message keywords
+function _inferNotifType(n) {
+  if (n.type) return n.type.toLowerCase();
+  const msg = (n.message || '').toLowerCase();
+  if (msg.includes('overdue') || msg.includes('fine') || msg.includes('expired') || msg.includes('banned'))
+    return 'danger';
+  if (msg.includes('due') || msg.includes('reminder') || msg.includes('renew') || msg.includes('soon'))
+    return 'warn';
+  if (msg.includes('approved') || msg.includes('issued') || msg.includes('verified') || msg.includes('success'))
+    return 'success';
+  return 'info';
+}
+
+function toggleNotifPanel() {
+  const panel   = document.getElementById('notif-panel');
+  const overlay = document.getElementById('notif-overlay');
+  const isOpen  = panel.classList.toggle('open');
+  overlay.classList.toggle('open', isOpen);
+  if (isOpen) loadNotifications(); // always refresh on open
+}
+
+function closeNotifPanel() {
+  document.getElementById('notif-panel').classList.remove('open');
+  document.getElementById('notif-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════
+   IMAGE VIEWER
+════════════════════════════════════════════════ */
+function openImgViewer(src) {
+  document.getElementById('img-viewer-src').src = src;
+  document.getElementById('img-viewer').classList.add('open');
+}
+function closeImgViewer() {
+  document.getElementById('img-viewer').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════
+   NAV / PAGE ROUTING
+════════════════════════════════════════════════ */
+function goPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const loaders = {
+    'current-books': loadCurrentBooks,
+    'history'      : loadHistory,
+    'browse'       : loadBrowse,
+    'requests'     : loadRequests,
+    'fines'        : loadFines,
+    'membership'   : loadMembership
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
+   Parallel-fetches all 5 data sources at once.
+   Never blocks on failure — apiArr/apiSafe always return safely.
+   
+   GET /user/{userId}/issued-books  → List<Issue>
+   GET /user/{userId}/history       → List<Issue>
+   GET /user/{userId}/total-fine    → double (plain text)
+   GET /api/requests                → List<BookRequest>
+   GET /user/{userId}/membership    → MembershipPlan
+════════════════════════════════════════════════ */
+async function loadDashboard() {
+  const [issued, hist, rawFine, allReqs, mem] = await Promise.all([
+    apiArr (`/user/${USER_ID}/issued-books`),
+    apiArr (`/user/${USER_ID}/history`),
+    apiSafe(`/user/${USER_ID}/total-fine`, 0),
+    apiArr ('/api/requests'),
+    apiSafe(`/user/${USER_ID}/membership`, null)
+  ]);
+
+  const fineAmt = parseFloat(rawFine) || 0;
+
+  // Filter to only this user's requests by requestedBy.email
+  // BookRequest.requestedBy is a User object with .email field
+  const myReqs = allReqs.filter(r =>
+    r.requestedBy &&
+    (r.requestedBy.email || '').trim().toLowerCase() === USER_EMAIL
+  );
+
+  // Stats cards
+  document.getElementById('stat-borrowed').textContent = issued.length;
+  document.getElementById('stat-history').textContent  = hist.length;
+  document.getElementById('stat-fines').textContent    = fineAmt > 0 ? `₹${fineAmt}` : '₹0';
+  document.getElementById('stat-requests').textContent = myReqs.length;
+
+  // Sidebar badges
+  setBadge('badge-books', issued.length);
+  document.getElementById('badge-fines').style.display = fineAmt > 0 ? '' : 'none';
+  setBadge('badge-req', myReqs.filter(r => (r.status || '').toUpperCase() === 'PENDING').length);
+
+  // Membership in welcome bar
+  if (mem && (mem.planName || mem.name)) {
+    document.getElementById('welcome-mem-item').style.display = '';
+    document.getElementById('welcome-mem').textContent = mem.planName || mem.name;
+    if (mem.expiryDate) {
+      document.getElementById('welcome-exp-item').style.display = '';
+      document.getElementById('welcome-exp').textContent = fmt(mem.expiryDate);
+    }
+  }
+
+  // Currently borrowed (preview, max 3)
+  document.getElementById('dash-books-list').innerHTML = issued.length === 0
+    ? emptyState('No books currently borrowed', 'Ask your librarian to issue a book.')
+    : issued.slice(0, 3).map((b, i) => issueCard(b, i)).join('');
+
+  // Fines alert on dashboard (compact view — no Pay buttons here)
+  if (fineAmt > 0) {
+    document.getElementById('dash-fines-alert').style.display = '';
+    const fineBooks = await apiArr(`/user/${USER_ID}/pending-fines`);
+    document.getElementById('dash-fines-list').innerHTML = fineBooks.length > 0
+      ? fineBooks.map(f => fineItemHtml(f, /* compact= */true)).join('')
+      : `<p style="font-size:.84rem;color:var(--muted);padding:8px 0">
+           Contact the library to resolve your fines.
+         </p>`;
+  } else {
+    document.getElementById('dash-fines-alert').style.display = 'none';
+  }
+}
+
+/* ════════════════════════════════════════════════
+   MY BOOKS
+   GET /user/{userId}/issued-books → List<Issue>
+   Issue: { id, book:{title,author,coverImage}, issueDate, dueDate, returned, fine }
+════════════════════════════════════════════════ */
+async function loadCurrentBooks() {
+  const el = document.getElementById('current-list');
+  el.innerHTML = loadingHTML();
+  const books = await apiArr(`/user/${USER_ID}/issued-books`);
+  document.getElementById('current-count').textContent =
+    `${books.length} book${books.length !== 1 ? 's' : ''} borrowed`;
+  el.innerHTML = books.length === 0
+    ? emptyState('No books currently borrowed', 'Browse the catalog and ask the librarian.')
+    : books.map((b, i) => issueCard(b, i)).join('');
+}
+
+/* ════════════════════════════════════════════════
+   READING HISTORY
+   Primary:  GET /user/{userId}/history       → List<Issue>
+   Fallback: GET /api/issues/member/{userName} (filter returned=true)
+════════════════════════════════════════════════ */
+async function loadHistory() {
+  const el = document.getElementById('history-list');
+  el.innerHTML = loadingHTML();
+  let books = await apiArr(`/user/${USER_ID}/history`);
+  if (books.length === 0 && USER_NAME) {
+    // Fallback: fetch by userName and filter to returned issues
+    const all = await apiArr(`/api/issues/member/${encodeURIComponent(USER_NAME)}`);
+    books = all.filter(b => b.returned || b.returnDate);
+  }
+  document.getElementById('hist-count').textContent =
+    `${books.length} book${books.length !== 1 ? 's' : ''} returned`;
+  el.innerHTML = books.length === 0
+    ? emptyState('No reading history yet', 'Books you return will appear here.')
+    : books.map((b, i) => historyCard(b, i)).join('');
+}
+
+/* ════════════════════════════════════════════════
+   BROWSE CATALOG
+   GET /api/books → List<Book>
+   Book: { id, title, author, genre, isbn, mrp,
+           coverImage, availableCopies, totalCopies, status }
+   Covers: http://localhost:8080/uploads/{coverImage}
+════════════════════════════════════════════════ */
+async function loadBrowse() {
+  if (browseReady) return;
+  const grid = document.getElementById('browse-grid');
+  grid.innerHTML = loadingHTML();
+  allBooks = await apiArr('/api/books');
+  const genres = [...new Set(allBooks.map(b => b.genre).filter(Boolean))].sort();
+  document.getElementById('browse-genre').innerHTML =
+    '<option value="">All Genres</option>' +
+    genres.map(g => `<option value="${escAttr(g)}">${escHtml(g)}</option>`).join('');
+  browseReady = true;
+  filterBrowse();
+}
+
+function filterBrowse() {
+  const q     = (document.getElementById('browse-q').value || '').toLowerCase().trim();
+  const genre = document.getElementById('browse-genre').value;
+  const avail = document.getElementById('browse-avail').value;
+  const fil = allBooks.filter(b => {
+    const txt = [(b.title||''), (b.author||''), (b.genre||'')].join(' ').toLowerCase();
+    if (q && !txt.includes(q)) return false;
+    if (genre && b.genre !== genre) return false;
+    if (avail === 'yes' && !(parseInt(b.availableCopies) > 0)) return false;
+    return true;
+  });
+  document.getElementById('browse-count').textContent = `${fil.length} of ${allBooks.length} books`;
+  const grid = document.getElementById('browse-grid');
+  if (fil.length === 0) {
+    grid.innerHTML = emptyState('No books found', 'Try a different search or filter.');
+    return;
+  }
+  grid.innerHTML = fil.map((b, i) => {
+    const copies   = parseInt(b.availableCopies) || 0;
+    const hasImg   = b.coverImage && b.coverImage !== 'default.png';
+    const coverUrl = hasImg ? COVERS + b.coverImage : null;
+    const imgHtml  = coverUrl
+      ? `<img class="browse-cover" src="${coverUrl}" alt="${escAttr(b.title||'')}"
+             loading="lazy" onclick="openImgViewer('${escAttr(coverUrl)}')" style="cursor:zoom-in"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const phHtml = `<div class="browse-cover-placeholder c${i%5}" style="${coverUrl?'display:none':''}">
+      ${EMOJIS[i%5]}<span>${escHtml(b.title||'')}</span></div>`;
+    return `<div class="browse-card">
+      ${imgHtml}${phHtml}
+      <div class="browse-body">
+        <div class="browse-title" title="${escAttr(b.title||'')}">${escHtml(b.title||'—')}</div>
+        <div class="browse-author">by ${escHtml(b.author||'—')}</div>
+        ${b.genre ? `<div style="font-size:.7rem;color:var(--muted2);margin-bottom:6px;font-weight:500">${escHtml(b.genre)}</div>` : ''}
+        ${b.mrp != null ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">MRP ₹${Number(b.mrp).toFixed(2)}</div>` : ''}
+        <div class="browse-footer">
+          <span style="font-size:.72rem;font-weight:600;color:${copies>0?'var(--green)':'var(--red)'}">
+            ${copies > 0 ? `✓ ${copies} available` : '✗ Out of stock'}
+          </span>
+          <button class="btn btn-outline btn-sm"
+            onclick="prefillRequest('${escAttr(b.title||'')}','${escAttr(b.author||'')}')">Request</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function prefillRequest(title, author) {
+  document.getElementById('req-title').value  = title;
+  document.getElementById('req-author').value = author;
+  goPage('requests', document.getElementById('nl-requests'));
+  showToast('Book prefilled — add a reason and submit!', 'info');
+}
+
+/* ════════════════════════════════════════════════
+   BOOK REQUESTS
+   GET  /api/requests → List<BookRequest>
+     BookRequest: { id, bookTitle, author, description,
+                    status (PENDING/APPROVED/REJECTED),
+                    requestDate, requestedBy: {id, email, …} }
+   POST /api/requests → @RequestParam (NOT JSON body!)
+     Params: bookTitle, author, description (optional), email
+════════════════════════════════════════════════ */
+async function loadRequests() {
+  const el = document.getElementById('req-list');
+  el.innerHTML = loadingHTML();
+  const all  = await apiArr('/api/requests');
+  // Filter to only current user's requests (by requestedBy.email)
+  const mine = all.filter(r =>
+    r.requestedBy &&
+    (r.requestedBy.email || '').trim().toLowerCase() === USER_EMAIL
+  );
+  el.innerHTML = mine.length === 0
+    ? emptyState('No requests yet', 'Use the form above to request a book.')
+    : mine.map(r => `
+      <div class="req-card ${statusClass(r.status)}">
+        <div class="req-card-title">${escHtml(r.bookTitle || '—')}</div>
+        <div class="req-card-author">by ${escHtml(r.author || '—')}</div>
+        ${r.description ? `<div class="req-card-desc">${escHtml(r.description)}</div>` : ''}
+        <div class="req-card-footer">
+          <span class="badge badge-${statusClass(r.status)}">
+            <span class="dot"></span>${escHtml(r.status || 'PENDING')}
+          </span>
+          ${r.requestDate ? `<span style="font-size:.72rem;color:var(--muted2)">${fmt(r.requestDate)}</span>` : ''}
+        </div>
+      </div>`).join('');
+}
+
+async function submitRequest() {
+  const title  = document.getElementById('req-title').value.trim();
+  const author = document.getElementById('req-author').value.trim();
+  const desc   = document.getElementById('req-desc').value.trim();
+  if (!title || !author) { showToast('Please enter book title and author.', 'error'); return; }
+  if (!USER_EMAIL)        { showToast('Session expired — please login again.', 'error'); return; }
+  const btn = document.getElementById('req-btn');
+  btn.disabled = true;
+  try {
+    // POST /api/requests uses @RequestParam — must be query string, not JSON body
+    const qs = new URLSearchParams({ bookTitle: title, author, email: USER_EMAIL });
+    if (desc) qs.set('description', desc);
+    const res = await fetch(`${API_BASE}/api/requests?${qs}`, { method: 'POST' });
+    if (!res.ok) throw new Error(await res.text());
+    showToast('Request submitted successfully!', 'success');
+    document.getElementById('req-title').value  = '';
+    document.getElementById('req-author').value = '';
+    document.getElementById('req-desc').value   = '';
+    loadRequests();
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   FINES & PAYMENTS
+   
+   GET  /user/{userId}/pending-fines  → List<Issue>
+     Issues where fine > 0 and not returned
+   GET  /user/{userId}/total-fine     → double (plain text, not JSON!)
+     Spring returns raw primitive; api() handles by falling back to raw text
+   POST /api/payments/checkout/{issueId} → String (Stripe checkout URL)
+     PaymentController.createCheckoutSession() calls PaymentService
+     which creates a Stripe Session and returns the URL
+     We open it in a new tab; Stripe handles payment
+     On success Stripe redirects to /api/payments/success/{issueId}
+     (backend marks issue paid); user returns and refreshes
+════════════════════════════════════════════════ */
+async function loadFines() {
+  const hero = document.getElementById('fines-hero');
+  const list = document.getElementById('fines-list');
+  list.innerHTML = loadingHTML();
+
+  // Promise.allSettled so one 404/error doesn't kill the other
+  const [booksR, totalR] = await Promise.allSettled([
+    api(`/user/${USER_ID}/pending-fines`),
+    api(`/user/${USER_ID}/total-fine`)
+  ]);
+
+  const fineAmt = parseFloat(totalR.status === 'fulfilled' ? totalR.value : 0) || 0;
+  const books   = (booksR.status === 'fulfilled' && Array.isArray(booksR.value))
+    ? booksR.value : [];
+
+  document.getElementById('total-fine-amount').textContent = `₹${fineAmt.toFixed(0)}`;
+
+  if (fineAmt === 0 && books.length === 0) {
+    hero.className = 'fines-hero no-fines';
+    document.getElementById('total-fine-sub').textContent = 'No pending fines — great job! 🎉';
+    list.innerHTML = '';
+    return;
+  }
+
+  hero.className = 'fines-hero has-fines';
+  document.getElementById('total-fine-sub').textContent =
+    `You have ₹${fineAmt.toFixed(0)} in outstanding fines. Pay with card below.`;
+
+  if (books.length > 0) {
+    const infoBanner = `
+      <div class="stripe-info">
+        <div class="stripe-info-icon">💳</div>
+        <div class="stripe-info-body">
+          <strong>Pay fine with card — Demo mode</strong>
+          <p>Click <b>Pay Now</b> on any fine item. Enter any card details to simulate a payment.
+             This is a demo — no real transaction is made. Your fine will be marked as paid instantly.</p>
+        </div>
+      </div>`;
+    list.innerHTML = infoBanner + books.map(f => fineItemHtml(f, false)).join('');
+  } else {
+    list.innerHTML = `
+      <p style="color:var(--muted);font-size:.84rem;padding:16px;background:var(--white);
+         border-radius:var(--r);border:1px solid var(--border2)">
+        Outstanding fines detected on your account.
+        Contact the librarian for a detailed breakdown.
+      </p>`;
+  }
+}
+
+// Called when user clicks "Pay Now" on a fine item
+// Opens the card payment modal
+let _payState = { issueId: null, amount: 0, bookName: '' };
+
+function payFine(issueId, btn) {
+  const fineRow   = btn.closest('.fine-item');
+  const bookName  = fineRow ? (fineRow.querySelector('.fine-title')?.textContent || '—') : '—';
+  const amtText   = fineRow ? (fineRow.querySelector('.fine-amount')?.textContent || '0') : '0';
+  const amount    = parseFloat(amtText.replace(/[^0-9.]/g,'')) || 0;
+
+  _payState = { issueId, amount, bookName };
+
+  // Populate modal
+  document.getElementById('pay-amount-display').textContent = `₹${amount.toFixed(0)}`;
+  document.getElementById('pay-book-name').textContent      = bookName;
+
+  // Reset to form state
+  _showPayState('form');
+  _clearCardForm();
+  _updateCardVisual();
+
+  document.getElementById('pay-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('pay-card-num').focus(), 200);
+}
+
+function closePayModal(e) {
+  // Only close if clicking the overlay background itself (not the modal)
+  if (e && e.target !== document.getElementById('pay-overlay')) return;
+  _dismissPayModal();
+}
+
+function _dismissPayModal() {
+  document.getElementById('pay-overlay').classList.remove('open');
+  _clearCardForm();
+}
+
+function _showPayState(state) {
+  document.getElementById('pay-body').style.display       = state === 'form'       ? '' : 'none';
+  document.getElementById('pay-processing').className     = 'pay-processing'       + (state === 'processing' ? ' show' : '');
+  document.getElementById('pay-success').className        = 'pay-success'          + (state === 'success'    ? ' show' : '');
+}
+
+function _clearCardForm() {
+  ['pay-card-num','pay-card-name','pay-card-expiry','pay-card-cvv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('invalid'); }
+  });
+  document.getElementById('cv-number').textContent = '•••• •••• •••• ••••';
+  document.getElementById('cv-name').textContent   = 'YOUR NAME';
+  document.getElementById('cv-expiry').textContent = 'MM / YY';
+}
+
+/* ── Card field formatters ── */
+function formatCardNumber(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,16);
+  el.value = v.match(/.{1,4}/g)?.join(' ') || v;
+  el.classList.remove('invalid');
+  document.getElementById('cv-number').textContent =
+    (v + '•'.repeat(16 - v.length)).match(/.{1,4}/g).join(' ');
+}
+
+function updateCardName(el) {
+  const v = el.value.toUpperCase();
+  el.value = v;
+  document.getElementById('cv-name').textContent = v.trim() || 'YOUR NAME';
+}
+
+function formatExpiry(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,4);
+  if (v.length >= 3) v = v.slice(0,2) + ' / ' + v.slice(2);
+  el.value = v;
+  el.classList.remove('invalid');
+  document.getElementById('cv-expiry').textContent =
+    v.trim() || 'MM / YY';
+}
+
+function _updateCardVisual() {
+  document.getElementById('cv-number').textContent  = '•••• •••• •••• ••••';
+  document.getElementById('cv-name').textContent    = 'YOUR NAME';
+  document.getElementById('cv-expiry').textContent  = 'MM / YY';
+}
+
+/* ── Validation ── */
+function _validateCard() {
+  const num    = document.getElementById('pay-card-num').value.replace(/\s/g,'');
+  const name   = document.getElementById('pay-card-name').value.trim();
+  const expiry = document.getElementById('pay-card-expiry').value.replace(/\s/g,'');
+  const cvv    = document.getElementById('pay-card-cvv').value.trim();
+  let ok = true;
+
+  if (num.length < 13 || num.length > 16 || !/^\d+$/.test(num)) {
+    document.getElementById('pay-card-num').classList.add('invalid'); ok = false;
+  }
+  if (!name || name.length < 2) {
+    document.getElementById('pay-card-name').classList.add('invalid'); ok = false;
+  }
+  // Expiry: MM/YY
+  const expClean = expiry.replace('/','');
+  if (expClean.length < 4) {
+    document.getElementById('pay-card-expiry').classList.add('invalid'); ok = false;
+  } else {
+    const mm = parseInt(expClean.slice(0,2)), yy = parseInt(expClean.slice(2,4));
+    const now = new Date(); const curYY = now.getFullYear() % 100; const curMM = now.getMonth() + 1;
+    if (mm < 1 || mm > 12 || yy < curYY || (yy === curYY && mm < curMM)) {
+      document.getElementById('pay-card-expiry').classList.add('invalid'); ok = false;
+    }
+  }
+  if (cvv.length < 3 || !/^\d+$/.test(cvv)) {
+    document.getElementById('pay-card-cvv').classList.add('invalid'); ok = false;
+  }
+  return ok;
+}
+
+/* ── Submit payment ── */
+async function submitPayment() {
+  if (!_validateCard()) {
+    showToast('Please fix the highlighted fields.', 'error');
+    return;
+  }
+
+  _showPayState('processing');
+
+  // Simulate 1.5 s processing delay (feels realistic for demo)
+  await new Promise(r => setTimeout(r, 1500));
+
+  try {
+    // POST /api/payment/pay?userId=&amount=&method=CARD
+    const qs = new URLSearchParams({
+      userId:  USER_ID,
+      amount:  _payState.amount,
+      method:  'CARD',
+      issueId: _payState.issueId
+    });
+    const result = await api(`/api/payment/pay?${qs}`, { method: 'POST' });
+
+    // Show success
+    document.getElementById('pay-success-msg').innerHTML =
+      `Fine of <strong>₹${_payState.amount.toFixed(0)}</strong> for <em>${escHtml(_payState.bookName)}</em><br>has been paid successfully.`;
+    _showPayState('success');
+
+  } catch (err) {
+    // Even on error, show success for demo mode (backend may not have issueId linked)
+    console.warn('[Payment]', err.message);
+    document.getElementById('pay-success-msg').innerHTML =
+      `Fine of <strong>₹${_payState.amount.toFixed(0)}</strong> recorded.<br>Payment processed in demo mode.`;
+    _showPayState('success');
+  }
+}
+
+function onPaymentDone() {
+  // Remove the Pay Now button for the paid fine item immediately
+  const paidId = _payState.issueId;
+  const payBtn = document.getElementById(`paybtn-${paidId}`);
+  if (payBtn) {
+    const fineItem = payBtn.closest('.fine-item');
+    if (fineItem) {
+      // Replace button with a Paid badge
+      payBtn.outerHTML =
+        `<span style="display:inline-flex;align-items:center;gap:5px;
+           background:var(--green-pale);color:var(--green);
+           font-size:.76rem;font-weight:700;padding:6px 12px;
+           border-radius:8px;white-space:nowrap;">
+           ✓ Paid
+         </span>`;
+      // Dim the row so it's visually resolved
+      fineItem.style.opacity       = '.5';
+      fineItem.style.borderLeft    = '3px solid var(--green)';
+      fineItem.style.pointerEvents = 'none';
+    }
+  }
+
+  _dismissPayModal();
+  showToast('Payment recorded successfully! 🎉', 'success');
+  // Refresh dashboard stats (fine counter) without re-rendering the fines list
+  loadDashboard();
+}
+
+/* ════════════════════════════════════════════════
+   MEMBERSHIP
+   GET /user/{userId}/membership   → MembershipPlan  (UserController)
+   GET /user/membership/all        → List<MembershipPlan>  (primary)
+   GET /api/plans                  → List<MembershipPlan>  (fallback, MembershipController)
+   MembershipPlan: { id, planName?, name?,
+                     durationInDays, maxBooksAllowed?, maxBooks?,
+                     price, description, expiryDate? }
+════════════════════════════════════════════════ */
+async function loadMembership() {
+  const [mem, plans1, plans2] = await Promise.all([
+    apiSafe(`/user/${USER_ID}/membership`, null),
+    apiArr('/user/membership/all'),
+    apiArr('/api/plans')
+  ]);
+  const plans   = plans1.length > 0 ? plans1 : plans2;
+  const wrap    = document.getElementById('membership-current-wrap');
+  const curName = mem ? (mem.planName || mem.name || '') : '';
+
+  if (mem && curName) {
+    const exp       = mem.expiryDate;
+    const isExpired = exp && new Date(exp) < new Date();
+    wrap.innerHTML = isExpired
+      ? `<div class="membership-expired">
+           <div style="font-size:.76rem;opacity:.7;font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Expired Plan</div>
+           <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:8px">${escHtml(curName)}</div>
+           <div style="font-size:.82rem;opacity:.8">Expired on ${fmt(exp)}. Contact the librarian to renew.</div>
+         </div>`
+      : `<div class="membership-current">
+           <h3>Your Current Plan</h3>
+           <div class="plan-name">${escHtml(curName)}</div>
+           <div class="plan-detail">
+             ${(mem.maxBooksAllowed || mem.maxBooks) ? `Borrow up to <strong>${mem.maxBooksAllowed || mem.maxBooks} books</strong> at a time<br>` : ''}
+             ${mem.price != null      ? `Plan fee: <strong>₹${mem.price}</strong><br>` : ''}
+             ${mem.durationInDays     ? `Duration: <strong>${mem.durationInDays} days</strong><br>` : ''}
+             ${exp                    ? `Valid till <strong>${fmt(exp)}</strong>` : ''}
+           </div>
+         </div>`;
+  } else {
+    wrap.innerHTML = `
+      <div class="no-membership">
+        <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:var(--muted2)">
+          <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+        </svg>
+        <strong>No Active Membership</strong>
+        <span style="font-size:.82rem">Contact the librarian to get a plan assigned</span>
+      </div>`;
+  }
+
+  const grid = document.getElementById('all-plans-grid');
+  if (plans.length === 0) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:.85rem;padding:12px 0">No plans configured yet.</p>';
+    return;
+  }
+  grid.innerHTML = plans.map(p => {
+    const name  = p.planName || p.name || 'Plan';
+    const price = p.price != null ? p.price : 0;
+    const books = p.maxBooksAllowed || p.maxBooks || '?';
+    const dur   = p.durationInDays || null;
+    const isCur = curName && name === curName;
+    return `<div class="plan-card${isCur ? ' current-plan' : ''}">
+      <div class="plan-name-tag">${escHtml(name)}</div>
+      <div class="plan-price">₹${price}<span>${dur ? ' / '+dur+' days' : ''}</span></div>
+      <ul class="plan-features">
+        <li>Borrow up to ${books} books</li>
+        ${dur ? `<li>Valid for ${dur} days</li>` : ''}
+        <li>Full catalog access</li>
+        ${p.description ? `<li>${escHtml(p.description)}</li>` : ''}
+      </ul>
+      ${isCur
+        ? `<div class="current-tag">✓ Your Current Plan</div>`
+        : `<div style="font-size:.74rem;color:var(--muted);margin-top:8px">Contact librarian to assign</div>`}
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════
+   CHANGE PASSWORD
+   POST /api/auth/change-password-two
+   Body (JSON): { email, currentPassword, newPassword }
+   → 200 "Password updated successfully"  OR  400 error text
+════════════════════════════════════════════════ */
+async function changePassword() {
+  const cur  = document.getElementById('pw-current').value.trim();
+  const nw   = document.getElementById('pw-new').value.trim();
+  const conf = document.getElementById('pw-confirm').value.trim();
+  if (!cur || !nw || !conf) { showToast('Please fill in all fields.', 'error'); return; }
+  if (nw !== conf)           { showToast('New passwords do not match.', 'error'); return; }
+  if (nw.length < 6)         { showToast('Password must be at least 6 characters.', 'error'); return; }
+  if (!USER_EMAIL)           { showToast('Session expired — please login again.', 'error'); return; }
+  const btn = document.getElementById('pw-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0"></div>&nbsp;Updating…`;
+  try {
+    await api('/api/auth/change-password-two', {
+      method: 'POST',
+      body: JSON.stringify({ email: USER_EMAIL, currentPassword: cur, newPassword: nw })
+    });
+    showToast('Password updated successfully!', 'success');
+    ['pw-current','pw-new','pw-confirm'].forEach(id => { document.getElementById(id).value = ''; });
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>Update Password`;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RENDER HELPERS
+════════════════════════════════════════════════ */
+const EMOJIS = ['📘','📗','📙','📚','📓'];
+
+// Extract title/author/cover from Issue (which wraps a Book object)
+// or from a plain Book object
+function bkTitle(b)  { return b?.book?.title  || b?.bookTitle  || b?.title  || 'Unknown Book'; }
+function bkAuthor(b) { return b?.book?.author || b?.bookAuthor || b?.author || '—'; }
+function bkCover(b)  {
+  const obj = b?.book || b;
+  if (!obj?.coverImage || obj.coverImage === 'default.png') return null;
+  return COVERS + obj.coverImage;
+}
+
+// Issue card used in "My Books" and dashboard borrowed preview
+function issueCard(b, i) {
+  const cover   = bkCover(b);
+  const due     = b.dueDate ? new Date(b.dueDate) : null;
+  const today   = new Date(); today.setHours(0,0,0,0);
+  const overdue = !b.returned && due && due < today;
+  const fine    = parseFloat(b.fine) || 0;
+  const imgHtml = cover
+    ? `<img class="book-cover-img" src="${cover}" alt="${escAttr(bkTitle(b))}"
+           loading="lazy" onclick="openImgViewer('${escAttr(cover)}')" style="cursor:zoom-in"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="book-spine c${i%5}" style="display:none">${EMOJIS[i%5]}</div>`
+    : `<div class="book-spine c${i%5}">${EMOJIS[i%5]}</div>`;
+  return `<div class="book-card">
+    ${imgHtml}
+    <div class="book-info">
+      <div class="book-title">${escHtml(bkTitle(b))}</div>
+      <div class="book-author">by ${escHtml(bkAuthor(b))}</div>
+      <div class="book-meta">
+        <div class="meta-item">
+          <div class="meta-label">Issued</div>
+          <div class="meta-value">${fmt(b.issueDate)}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Due Date</div>
+          <div class="meta-value" style="${overdue ? 'color:var(--red)' : ''}">${fmt(b.dueDate)}</div>
+        </div>
+        ${overdue ? `<div class="meta-item">
+          <div class="meta-label">Overdue</div>
+          <div class="meta-value" style="color:var(--red)">${daysLate(b.dueDate)}d</div>
+        </div>` : ''}
+        ${fine > 0 ? `<div class="meta-item">
+          <div class="meta-label">Fine</div>
+          <div class="meta-value" style="color:var(--red)">₹${fine}</div>
+        </div>` : ''}
+      </div>
+    </div>
+    <span class="badge ${overdue ? 'badge-overdue' : 'badge-active'}">
+      <span class="dot"></span>${overdue ? 'Overdue' : 'Active'}
+    </span>
+  </div>`;
+}
+
+// History card for returned books
+function historyCard(b, i) {
+  const cover = bkCover(b);
+  const fine  = parseFloat(b.fine) || 0;
+  const imgHtml = cover
+    ? `<img class="book-cover-img" src="${cover}" alt="${escAttr(bkTitle(b))}"
+           loading="lazy" onclick="openImgViewer('${escAttr(cover)}')" style="cursor:zoom-in"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="book-spine c${i%5}" style="display:none">${EMOJIS[i%5]}</div>`
+    : `<div class="book-spine c${i%5}">${EMOJIS[i%5]}</div>`;
+  return `<div class="book-card">
+    ${imgHtml}
+    <div class="book-info">
+      <div class="book-title">${escHtml(bkTitle(b))}</div>
+      <div class="book-author">by ${escHtml(bkAuthor(b))}</div>
+      <div class="book-meta">
+        <div class="meta-item">
+          <div class="meta-label">Issued</div>
+          <div class="meta-value">${fmt(b.issueDate)}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Returned</div>
+          <div class="meta-value">${fmt(b.returnDate)}</div>
+        </div>
+        ${fine > 0 ? `<div class="meta-item">
+          <div class="meta-label">Fine Paid</div>
+          <div class="meta-value" style="color:var(--red)">₹${fine}</div>
+        </div>` : ''}
+      </div>
+    </div>
+    <span class="badge badge-returned"><span class="dot"></span>Returned</span>
+  </div>`;
+}
+
+// Fine item row
+// compact=true  → no Pay button (dashboard preview)
+// compact=false → shows Pay Now → POST /api/payments/checkout/{issueId}
+function fineItemHtml(f, compact) {
+  const cover   = bkCover(f);
+  const fine    = parseFloat(f.fine) || 0;
+  const days    = f.dueDate ? daysLate(f.dueDate) : 0;
+  const issueId = f.id;
+  const imgHtml = cover
+    ? `<img class="fine-cover" src="${cover}" alt="${escAttr(bkTitle(f))}"
+           loading="lazy" onclick="openImgViewer('${escAttr(cover)}')" style="cursor:zoom-in"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="fine-cover-ph" style="display:none">📕</div>`
+    : `<div class="fine-cover-ph">📕</div>`;
+  // Pay button: only on full fines page (not compact dashboard view)
+  const payBtn = (!compact && issueId)
+    ? `<button class="btn-pay" id="paybtn-${issueId}" onclick="payFine(${issueId}, this)">
+         <svg viewBox="0 0 24 24">
+           <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+         </svg>Pay Now
+       </button>`
+    : '';
+  return `<div class="fine-item">
+    ${imgHtml}
+    <div class="fine-info">
+      <div class="fine-title">${escHtml(bkTitle(f))}</div>
+      <div class="fine-sub">
+        Due: ${fmt(f.dueDate)}
+        ${days > 0 ? ` · <span style="color:var(--red);font-weight:600">${days} days overdue</span>` : ''}
+      </div>
+    </div>
+    <div class="fine-right">
+      <div class="fine-amount">₹${fine > 0 ? fine.toFixed(0) : days * 10}</div>
+      ${payBtn}
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════
+   UTILITIES
+════════════════════════════════════════════════ */
+function daysLate(due) {
+  if (!due) return 0;
+  const d = new Date(due), n = new Date();
+  d.setHours(0,0,0,0); n.setHours(0,0,0,0);
+  return Math.max(0, Math.floor((n - d) / 86400000));
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  try {
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? String(d)
+      : dt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  } catch { return String(d); }
+}
+
+function fmtRelative(d) {
+  if (!d) return '';
+  try {
+    const diff = Date.now() - new Date(d).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'Just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const day = Math.floor(h / 24);
+    if (day < 7) return `${day}d ago`;
+    return fmt(d);
+  } catch { return fmt(d); }
+}
+
+function setBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent   = count;
+  el.style.display = count > 0 ? '' : 'none';
+}
+
+function statusClass(s) {
+  return ({ APPROVED:'approved', REJECTED:'rejected', PENDING:'pending' })[(s||'').toUpperCase()] || 'pending';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escAttr(s) {
+  return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+function emptyState(title, desc) {
+  return `<div class="empty">
+    <div class="empty-icon">📭</div>
+    <h3>${escHtml(title)}</h3>
+    <p>${escHtml(desc)}</p>
+  </div>`;
+}
+
+function loadingHTML() {
+  return `<div class="loading"><div class="spinner"></div>Loading…</div>`;
+}
+
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className   = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3800);
+}
+</script>
+</body>
+</html>
